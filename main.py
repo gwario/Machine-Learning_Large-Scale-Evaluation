@@ -9,8 +9,8 @@ import numpy as np
 import datetime
 
 import pandas as pd
-from sklearn.ensemble.forest import ExtraTreesRegressor
-from sklearn.model_selection import RandomizedSearchCV, cross_validate, KFold, train_test_split
+from sklearn.ensemble.forest import ExtraTreesClassifier
+from sklearn.model_selection import RandomizedSearchCV, cross_validate, KFold, train_test_split, StratifiedShuffleSplit
 from sklearn.pipeline import Pipeline
 from sklearn.metrics import r2_score, mean_squared_error
 from sklearn.feature_selection import chi2, SelectKBest, mutual_info_regression
@@ -31,41 +31,74 @@ if __name__ == '__main__':
     config = {
         'experiment': 'experiment_1',               # the title of the experiment
         'repetitions': 10,                          # number of times every estimator is run with every dataset
-        'datasets': ['1.arff', '2.arff', '3.arff'], # preprocessed dataset
-        'splits': [0.6, 0.2, 0.2],                  # number of splits and size... must add up to 1.0
+        'datasets': ['iris.arff',
+                     'mammography.arff',
+                     'speeddating.arff'], # preprocessed dataset
+        'splits': [0.6, 0.2, 0.2],                  # size of splits, first is train set, must add up to 1.0
         'estimators': [                             # the estimators
             {
-                'estimator': 'ExtraTreesRegressor', # estimator name from the list of available estimators
+                'estimator': 'ExtraTreesClassifier', # estimator name from the list of available estimators
                 'params': {}                        # estimator parameters, see scikit docs
             },
             {
-                'estimator': 'ExtraTreesRegressor',
+                'estimator': 'DecisionTreeClassifier',
                 'params': {},
             },
         ]
     }
 
-    # TODO load datasets and algorithms
+    for dataset_filename in config['datasets']:
 
-    # TODO for every repetition
+        # TODO load dataset
+        X, y = io.load_data(dataset_filename)
 
-    # TODO generate splits
+        for estimator_name in config['estimators']:
 
-    # TODO for every dataset:
+            # TODO load algorithm
+            estimator = None
 
-    # TODO for every classifier pipeline:
+            # for every repetition
+            splits = StratifiedShuffleSplit(random_state=random_state,
+                                            n_splits=config['repetitions'],
+                                            train_size=config['splits'][0])
 
-    # TODO crossvalidate evaluation all metrics
+            for train_index, test_index in splits.split(X, y):
 
-    # TODO create output directory with config.experiment
-    # TODO store entire config (actual estimator params)
-    # TODO store results arff
-    # TODO store results diagrams
+                print("TRAIN:", train_index, "WHOLE_TEST:", test_index)
+                X_train, X_test = X[train_index], X[test_index]
+                y_train, y_test = y[train_index], y[test_index]
 
-    # TODO arff output template
-    # dataset, algorithm, repetition_index, split_index, metric1, metric2, metric3
+                # generate test sets
+                X_remaining = X_test
+                y_remaining = y_test
 
-    # TODO generate diagrams (maybe external script?)
+                X_test_sets = []
+                y_test_sets = []
+
+                for idx, test_size in enumerate(config['splits'][1:-1]): # all but the last test split
+
+                    test_index, remaining_index = StratifiedShuffleSplit(random_state=random_state, n_splits=1,
+                                                                         train_size=test_size).split(X_test, y_test)
+                    print("TEST_"+idx+":", test_index)
+                    # get next test split and update remaining set
+                    X_test, X_remaining = X[test_index], X[remaining_index]
+                    y_test, y_remaining = y[test_index], y[remaining_index]
+                    X_test_sets += X_test
+                    y_test_sets += y_test
+
+                # TODO for every classifier pipeline:
+
+                # TODO crossvalidate evaluation all metrics
+
+                # TODO create output directory with config.experiment
+                # TODO store entire config (actual estimator params)
+                # TODO store results arff
+                # TODO store results diagrams
+
+                # TODO arff output template
+                # dataset, algorithm, repetition_index, split_index, metric1, metric2, metric3
+
+                # TODO generate diagrams (maybe external script?)
 
     #mode = 'hpsearch'
     mode = 'evaluate'

@@ -1,6 +1,7 @@
 import logging as log
 import os.path
 import json
+from arff2pandas import a2p
 from pprint import pprint, pformat
 import pandas as pd
 from sklearn.externals import joblib
@@ -98,6 +99,28 @@ def load_data(data_file):
         y_train = df.loc[:, ch_target].values.ravel()
 
         return x_train, y_train
+
+    elif data_file == 'iris.arff':
+
+        with open(data_file) as f:
+            dataset = a2p.load(f)
+
+        pprint(dataset)
+        return dataset['sepallength', 'sepalwidth', 'petallength', 'petalwidth'], dataset['class']
+
+    elif data_file == 'mammography.arff':
+
+        dataset = a2p.load(open(data_file))
+
+        pprint(dataset)
+        return [], []
+
+    elif data_file == 'speeddating.arff':
+
+        dataset = a2p.load(open(data_file))
+
+        pprint(dataset)
+        return [], []
 
 
 def load_model(model_file):
