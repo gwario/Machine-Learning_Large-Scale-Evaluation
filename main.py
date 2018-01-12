@@ -65,6 +65,7 @@ if __name__ == '__main__':
     # TODO arff output template
     # dataset, algorithm, repetition_index, split_index, metric1, metric2, metric3
 
+    # TODO generate diagrams (maybe external script?)
 
     #mode = 'hpsearch'
     mode = 'evaluate'
