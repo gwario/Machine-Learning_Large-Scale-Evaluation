@@ -1,7 +1,9 @@
 import logging as log
 import os.path
 import json
-from arff2pandas import a2p
+import numpy as np
+import arff
+from scipy.io import arff
 from pprint import pprint, pformat
 import pandas as pd
 from sklearn.externals import joblib
@@ -102,25 +104,38 @@ def load_data(data_file):
 
     elif data_file == 'iris.arff':
 
-        with open(data_file) as f:
-            dataset = a2p.load(f)
+        data, meta = arff.loadarff(data_file)
+        df = pd.DataFrame(data)
+        df.info()
 
-        pprint(dataset)
-        return dataset['sepallength', 'sepalwidth', 'petallength', 'petalwidth'], dataset['class']
+        X = df.loc[:, ['sepallength', 'sepalwidth', 'petallength', 'petalwidth']]
+        y = df.loc[:, ['class']].values.ravel()
+
+        return X, y
 
     elif data_file == 'mammography.arff':
 
-        dataset = a2p.load(open(data_file))
+        data, meta = arff.loadarff(data_file)
+        df = pd.DataFrame(data)
+        df.info()
 
-        pprint(dataset)
-        return [], []
+        X = df.loc[:, ['attr1', 'attr2', 'attr3', 'attr4', 'attr5', 'attr6']]
+        y = df.loc[:, ['class']].values.ravel()
+
+        return X, y
 
     elif data_file == 'speeddating.arff':
 
-        dataset = a2p.load(open(data_file))
+        data, meta = arff.loadarff(data_file)
+        df = pd.DataFrame(data)
+        df.info()
 
-        pprint(dataset)
-        return [], []
+        X = df.loc[:, ['...']]
+        y = df.loc[:, ['...']].values.ravel()
+
+        # TODO preprocessing
+
+        return X, y
 
 
 def load_model(model_file):

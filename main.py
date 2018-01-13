@@ -32,8 +32,8 @@ if __name__ == '__main__':
         'experiment': 'experiment_1',               # the title of the experiment
         'repetitions': 10,                          # number of times every estimator is run with every dataset
         'datasets': ['iris.arff',
-                     'mammography.arff',
-                     'speeddating.arff'], # preprocessed dataset
+                     #'speeddating.arff',
+                     'mammography.arff'], # preprocessed dataset
         'splits': [0.6, 0.2, 0.2],                  # size of splits, first is train set, must add up to 1.0
         'estimators': [                             # the estimators
             {
@@ -49,7 +49,7 @@ if __name__ == '__main__':
 
     for dataset_filename in config['datasets']:
 
-        # TODO load dataset
+        # TODO load preprocessed dataset
         X, y = io.load_data(dataset_filename)
 
         for estimator_name in config['estimators']:
