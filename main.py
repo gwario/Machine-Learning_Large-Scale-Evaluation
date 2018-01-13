@@ -83,6 +83,58 @@ if __name__ == '__main__':
     if config['datasets'] == True:
         stratify = True
 
+    result = [{'dataset': '<filename_0>',
+               'results': [{'algorithm': '<algo_name_0>',
+                            'iterations': [{'iteration': 0,
+                                            'metrics': ['fit_time', 'test_0_time', 'test_1_time',
+                                                        'train_accuracy', 'test_0_accuracy', '<test_0_accuracy>',
+                                                        '...']},
+                                           {'iteration': 1,
+                                            'metrics': ['<fit_time>', '<test_0_time>', '<test_1_time>',
+                                                        '<train_accuracy>', '<test_0_accuracy>', '<test_1_accuracy>',
+                                                        '...']}
+                                           ],
+                            },
+                            {'algorithm': '<algo_name_1>',
+                             'iterations': [{'iteration': 0,
+                                             'metrics': ['fit_time', 'test_0_time', 'test_1_time',
+                                                         'train_accuracy', 'test_0_accuracy', '<test_0_accuracy>',
+                                                         '...']},
+                                            {'iteration': 1,
+                                             'metrics': ['<fit_time>', '<test_0_time>', '<test_1_time>',
+                                                         '<train_accuracy>', '<test_0_accuracy>', '<test_1_accuracy>',
+                                                         '...']}
+                                            ],
+                             },
+                           ]
+               },
+              {'dataset': '<filename_0>',
+               'results': [{'algorithm': '<algo_name_0>',
+                            'iterations': [{'iteration': 0,
+                                            'metrics': ['fit_time', 'test_0_time', 'test_1_time',
+                                                        'train_accuracy', 'test_0_accuracy', '<test_0_accuracy>',
+                                                        '...']},
+                                           {'iteration': 1,
+                                            'metrics': ['<fit_time>', '<test_0_time>', '<test_1_time>',
+                                                        '<train_accuracy>', '<test_0_accuracy>', '<test_1_accuracy>',
+                                                        '...']}
+                                           ],
+                            },
+                           {'algorithm': '<algo_name_1>',
+                            'iterations': [{'iteration': 0,
+                                            'metrics': ['fit_time', 'test_0_time', 'test_1_time',
+                                                        'train_accuracy', 'test_0_accuracy', '<test_0_accuracy>',
+                                                        '...']},
+                                           {'iteration': 1,
+                                            'metrics': ['<fit_time>', '<test_0_time>', '<test_1_time>',
+                                                        '<train_accuracy>', '<test_0_accuracy>', '<test_1_accuracy>',
+                                                        '...']}
+                                           ],
+                            },
+                           ]
+               },
+              ]
+
     for dataset_filename in config['datasets']:
         log.info("DATASET: {}".format(dataset_filename))
 
