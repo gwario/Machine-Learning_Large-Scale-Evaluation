@@ -23,8 +23,6 @@ log.basicConfig(level=log.INFO, format='%(asctime)s %(levelname)s %(message)s')
 
 random_state = 12345
 
-DATASET_LESS_DATA = True
-DATASET_FRACTION_PCT = 10
 
 def generate_test_sets(X_test, y_test):
 
@@ -51,6 +49,8 @@ def generate_test_sets(X_test, y_test):
         log.debug("TEST_SET_{}:\n{}".format(test_i, pp.pformat(X_test_i)))
         log.debug("Remaining after TEST_SET_{}:\n{}".format(test_i, pp.pformat(X_remaining)))
 
+    X_test_sets.append(X_remaining)
+    y_test_sets.append(y_remaining)
     log.debug("TEST_SET_{}:\n{}".format(config['test_splits'] - 1, pp.pformat(X_remaining)))
     return X_test_sets, y_test_sets
 
@@ -61,21 +61,21 @@ if __name__ == '__main__':
     config = {
         'experiment': 'experiment_1',               # the title of the experiment
         'stratify': True,                           # whether to stratify or not
-        'repetitions': 2,                          # number of times every estimator is run with every dataset
+        'repetitions': 1,                           # number of times every estimator is run with every dataset
         'datasets': ['iris.arff',],
-                     #'speeddating.arff',
-                     #'mammography.arff'],           # preprocessed dataset
+                     #'mammography.arff',
+                     #'speeddating.arff'],          # preprocessed dataset
         'train_size': 0.6,                          # size of training set
-        'test_splits': 3,                           # the number of test splits (test_size = (1-train_size)/test_spits)
+        'test_splits': 2,                           # the number of test splits (test_size = (1-train_size)/test_spits)
         'estimators': [                             # the estimators
             {
                 'estimator': 'ExtraTreesClassifier', # estimator name from the list of available estimators
                 'params': {}                        # estimator parameters, see scikit docs
             },
-            {
-                'estimator': 'ExtraTreesClassifier', # estimator name from the list of available estimators
-                'params': {}                        # estimator parameters, see scikit docs
-            },
+            #{
+            #    'estimator': 'ExtraTreesClassifier',
+            #    'params': {}
+            #},
         ]
     }
 
@@ -88,10 +88,6 @@ if __name__ == '__main__':
 
         # load preprocessed dataset
         X, y = io.load_data(dataset_filename)
-
-        if DATASET_LESS_DATA:
-            log.warning("Using only {}% of the instances.".format(DATASET_FRACTION_PCT))
-            X, _, y, _ = train_test_split(X, y, train_size=DATASET_FRACTION_PCT / 100, random_state=random_state)
 
         for estimator_i, estimator in enumerate(config['estimators']):
             log.info("ESTIMATOR_{}: {}".format(estimator_i, estimator['estimator']))
@@ -115,8 +111,9 @@ if __name__ == '__main__':
 
                 log.info("TEST_SETS:\n{}".format(pp.pformat(X_test_sets)))
 
-                # TODO crossvalidate evaluation all metrics using X_train, y_train and X_test_i, y_test_i
-                # TODO store all metrics for this split
+                # TODO cross-validated evaluation with all metrics for X_train and all in X_test_sets
+
+                # TODO store metrics
 
                 # TODO create output directory with config.experiment
                 # TODO store entire config (actual estimator params)

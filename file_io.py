@@ -39,6 +39,10 @@ ch_target = 'prp'
 ch_features = ['myct', 'mmin', 'mmax', 'cach', 'chmin', 'chmax']
 
 
+DATASET_LESS_DATA = True
+DATASET_INSTANCE_CAP_PCT = 100
+
+
 def load_data(data_file):
     """Loads the input data from data_file."""
 
@@ -106,6 +110,11 @@ def load_data(data_file):
 
         data, meta = arff.loadarff(data_file)
         df = pd.DataFrame(data)
+        df = df.sample(frac=1)
+        if DATASET_LESS_DATA:
+            log.warning("Using at most {} instances.".format(DATASET_INSTANCE_CAP_PCT))
+            df.drop(df.index[:-100], inplace=True)
+
         df.info()
 
         X = df.loc[:, ['sepallength', 'sepalwidth', 'petallength', 'petalwidth']]
@@ -118,6 +127,11 @@ def load_data(data_file):
 
         data, meta = arff.loadarff(data_file)
         df = pd.DataFrame(data)
+        df = df.sample(frac=1)
+        if DATASET_LESS_DATA:
+            log.warning("Using at most {} instances.".format(DATASET_INSTANCE_CAP_PCT))
+            df.drop(df.index[:-100], inplace=True)
+
         df.info()
 
         X = df.loc[:, ['attr1', 'attr2', 'attr3', 'attr4', 'attr5', 'attr6']]
@@ -129,6 +143,11 @@ def load_data(data_file):
 
         data, meta = arff.loadarff(data_file)
         df = pd.DataFrame(data)
+        df = df.sample(frac=1)
+        if DATASET_LESS_DATA:
+            log.warning("Using at most {} instances.".format(DATASET_INSTANCE_CAP_PCT))
+            df.drop(df.index[:-100], inplace=True)
+
         df.info()
 
         X = df.loc[:, ['...']]
