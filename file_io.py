@@ -110,6 +110,7 @@ def load_data(data_file):
 
         X = df.loc[:, ['sepallength', 'sepalwidth', 'petallength', 'petalwidth']]
         y = df.loc[:, ['class']].values.ravel()
+        #y = df.loc[:, ['class']]
 
         return X, y
 

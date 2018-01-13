@@ -10,19 +10,49 @@ import datetime
 
 import pandas as pd
 from sklearn.ensemble.forest import ExtraTreesClassifier
-from sklearn.model_selection import RandomizedSearchCV, cross_validate, KFold, train_test_split, StratifiedShuffleSplit
+from sklearn.model_selection import RandomizedSearchCV, cross_validate, KFold, train_test_split, StratifiedShuffleSplit, StratifiedKFold
 from sklearn.pipeline import Pipeline
 from sklearn.metrics import r2_score, mean_squared_error
 from sklearn.feature_selection import chi2, SelectKBest, mutual_info_regression
 
 import file_io as io
 import report as rp
-from util import StrDateToUnixTs
 
 # Display progress logs on stdout
-log.basicConfig(level=log.DEBUG, format='%(asctime)s %(levelname)s %(message)s')
+log.basicConfig(level=log.INFO, format='%(asctime)s %(levelname)s %(message)s')
 
 random_state = 12345
+
+DATASET_LESS_DATA = True
+DATASET_FRACTION_PCT = 10
+
+def generate_test_sets(X_test, y_test):
+
+    log.debug("# TEST_SETS: {}".format(config['test_splits']))
+    log.debug("TEST_SIZE: {}".format((1 - config['train_size']) / config['test_splits']))
+
+    X_test_sets = []
+    y_test_sets = []
+
+    X_remaining = X_test
+    y_remaining = y_test
+    for test_i in range(config['test_splits'] - 1):
+        actual_test_size = 1 / (config['test_splits'] - test_i)
+
+        X_rest, X_test_i, y_rest, y_test_i = train_test_split(X_remaining, y_remaining,
+                                                              stratify=y_remaining if stratify else None,
+                                                              test_size=actual_test_size,
+                                                              random_state=random_state+repetition_i)
+        X_test_sets.append(X_test_i)
+        y_test_sets.append(y_test_i)
+
+        X_remaining = X_rest
+        y_remaining = y_rest
+        log.debug("TEST_SET_{}:\n{}".format(test_i, pp.pformat(X_test_i)))
+        log.debug("Remaining after TEST_SET_{}:\n{}".format(test_i, pp.pformat(X_remaining)))
+
+    log.debug("TEST_SET_{}:\n{}".format(config['test_splits'] - 1, pp.pformat(X_remaining)))
+    return X_test_sets, y_test_sets
 
 
 if __name__ == '__main__':
@@ -30,65 +60,63 @@ if __name__ == '__main__':
     # Template for config.json
     config = {
         'experiment': 'experiment_1',               # the title of the experiment
-        'repetitions': 10,                          # number of times every estimator is run with every dataset
-        'datasets': ['iris.arff',
+        'stratify': True,                           # whether to stratify or not
+        'repetitions': 2,                          # number of times every estimator is run with every dataset
+        'datasets': ['iris.arff',],
                      #'speeddating.arff',
-                     'mammography.arff'], # preprocessed dataset
-        'splits': [0.6, 0.2, 0.2],                  # size of splits, first is train set, must add up to 1.0
+                     #'mammography.arff'],           # preprocessed dataset
+        'train_size': 0.6,                          # size of training set
+        'test_splits': 3,                           # the number of test splits (test_size = (1-train_size)/test_spits)
         'estimators': [                             # the estimators
             {
                 'estimator': 'ExtraTreesClassifier', # estimator name from the list of available estimators
                 'params': {}                        # estimator parameters, see scikit docs
             },
             {
-                'estimator': 'DecisionTreeClassifier',
-                'params': {},
+                'estimator': 'ExtraTreesClassifier', # estimator name from the list of available estimators
+                'params': {}                        # estimator parameters, see scikit docs
             },
         ]
     }
 
-    for dataset_filename in config['datasets']:
+    stratify = None
+    if config['datasets'] == True:
+        stratify = True
 
-        # TODO load preprocessed dataset
+    for dataset_filename in config['datasets']:
+        log.info("DATASET: {}".format(dataset_filename))
+
+        # load preprocessed dataset
         X, y = io.load_data(dataset_filename)
 
-        for estimator_name in config['estimators']:
+        if DATASET_LESS_DATA:
+            log.warning("Using only {}% of the instances.".format(DATASET_FRACTION_PCT))
+            X, _, y, _ = train_test_split(X, y, train_size=DATASET_FRACTION_PCT / 100, random_state=random_state)
+
+        for estimator_i, estimator in enumerate(config['estimators']):
+            log.info("ESTIMATOR_{}: {}".format(estimator_i, estimator['estimator']))
 
             # TODO load algorithm
             estimator = None
 
             # for every repetition
-            splits = StratifiedShuffleSplit(random_state=random_state,
-                                            n_splits=config['repetitions'],
-                                            train_size=config['splits'][0])
+            for repetition_i in range(config['repetitions']):
+                log.info("REPETITION_{}".format(repetition_i))
 
-            for train_index, test_index in splits.split(X, y):
-
-                print("TRAIN:", train_index, "WHOLE_TEST:", test_index)
-                X_train, X_test = X[train_index], X[test_index]
-                y_train, y_test = y[train_index], y[test_index]
+                X_train, X_test, y_train, y_test = train_test_split(X, y,
+                                                                    stratify=y if stratify else None,
+                                                                    train_size=config['train_size'],
+                                                                    random_state=random_state+repetition_i)
+                log.debug("TRAIN_SET:\n{}".format(pp.pformat(X_train)))
+                log.debug("TEST_SET:\n{}".format(pp.pformat(X_test)))
 
                 # generate test sets
-                X_remaining = X_test
-                y_remaining = y_test
+                X_test_sets, y_test_sets = generate_test_sets(X_test, y_test)
 
-                X_test_sets = []
-                y_test_sets = []
+                log.info("TEST_SETS:\n{}".format(pp.pformat(X_test_sets)))
 
-                for idx, test_size in enumerate(config['splits'][1:-1]): # all but the last test split
-
-                    test_index, remaining_index = StratifiedShuffleSplit(random_state=random_state, n_splits=1,
-                                                                         train_size=test_size).split(X_test, y_test)
-                    print("TEST_"+idx+":", test_index)
-                    # get next test split and update remaining set
-                    X_test, X_remaining = X[test_index], X[remaining_index]
-                    y_test, y_remaining = y[test_index], y[remaining_index]
-                    X_test_sets += X_test
-                    y_test_sets += y_test
-
-                # TODO for every classifier pipeline:
-
-                # TODO crossvalidate evaluation all metrics
+                # TODO crossvalidate evaluation all metrics using X_train, y_train and X_test_i, y_test_i
+                # TODO store all metrics for this split
 
                 # TODO create output directory with config.experiment
                 # TODO store entire config (actual estimator params)
