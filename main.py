@@ -9,10 +9,11 @@ import numpy as np
 import datetime
 
 import pandas as pd
-from sklearn.ensemble.forest import ExtraTreesClassifier
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.ensemble import ExtraTreesClassifier, RandomForestClassifier, AdaBoostClassifier
 from sklearn.model_selection import RandomizedSearchCV, cross_validate, KFold, train_test_split, StratifiedShuffleSplit, StratifiedKFold
 from sklearn.pipeline import Pipeline
-from sklearn.metrics import r2_score, mean_squared_error
+from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score, classification_report
 from sklearn.feature_selection import chi2, SelectKBest, mutual_info_regression
 
 import file_io as io
@@ -55,6 +56,33 @@ def generate_test_sets(X_test, y_test):
     return X_test_sets, y_test_sets
 
 
+def get_estimator(config):
+
+    estimator_name = config['estimator']
+    estimator_params = config['params']
+
+    if estimator_name == 'RandomForestClassifier':
+        estimator = RandomForestClassifier()
+        estimator.set_params(**estimator_params)
+    elif estimator_name == 'ExtraTreesClassifier':
+        estimator = ExtraTreesClassifier()
+        estimator.set_params(**estimator_params)
+    elif estimator_name == 'AdaBoostClassifier':
+        estimator = AdaBoostClassifier()
+        estimator.set_params(**estimator_params)
+    elif estimator_name == 'DecisionTreeClassifier':
+        estimator = DecisionTreeClassifier()
+        estimator.set_params(**estimator_params)
+
+    return estimator
+
+
+# Available datasets:
+#
+# Available estimators:
+# RandomForestClassifier, ExtraTreesClassifier, DecisionTreeClassifier, AdaBoostClassifier ...
+# TODO add more estimators
+#
 if __name__ == '__main__':
 
     # Template for config.json
@@ -69,8 +97,11 @@ if __name__ == '__main__':
         'test_splits': 2,                           # the number of test splits (test_size = (1-train_size)/test_spits)
         'estimators': [                             # the estimators
             {
-                'estimator': 'ExtraTreesClassifier', # estimator name from the list of available estimators
-                'params': {}                        # estimator parameters, see scikit docs
+                'estimator': 'ExtraTreesClassifier',# estimator name from the list of available estimators
+                'params': {                         # estimator parameters, see scikit docs
+                    'random_state': random_state,
+                    'n_estimators': 500
+                }
             },
             #{
             #    'estimator': 'ExtraTreesClassifier',
@@ -144,14 +175,14 @@ if __name__ == '__main__':
         for estimator_i, estimator in enumerate(config['estimators']):
             log.info("ESTIMATOR_{}: {}".format(estimator_i, estimator['estimator']))
 
-            # TODO load algorithm
-            estimator = None
+            # load algorithm
+            estimator = get_estimator(estimator)
 
             # for every repetition
             for repetition_i in range(config['repetitions']):
                 log.info("REPETITION_{}".format(repetition_i))
 
-                X_train, X_test, y_train, y_test = train_test_split(X, y,
+                X_train, X_test, y_train_true, y_test_true = train_test_split(X, y,
                                                                     stratify=y if stratify else None,
                                                                     train_size=config['train_size'],
                                                                     random_state=random_state+repetition_i)
@@ -159,11 +190,59 @@ if __name__ == '__main__':
                 log.debug("TEST_SET:\n{}".format(pp.pformat(X_test)))
 
                 # generate test sets
-                X_test_sets, y_test_sets = generate_test_sets(X_test, y_test)
-
+                X_test_sets, y_test_sets = generate_test_sets(X_test, y_test_true)
                 log.info("TEST_SETS:\n{}".format(pp.pformat(X_test_sets)))
 
-                # TODO cross-validated evaluation with all metrics for X_train and all in X_test_sets
+                # fit_time, train_pred_time, train_accuracy, test_0_pred_time, test_0_accuracy, ...
+                scores = { 'train': [],
+                           'test': []}
+
+                t0 = datetime.datetime.now()
+                estimator.fit(X_train, y_train_true)
+                dT_fit = datetime.datetime.now() - t0
+
+                t0 = datetime.datetime.now()
+                y_train_pred = estimator.predict(X_train)
+                dT_train_pred = datetime.datetime.now() - t0
+
+                train_accuracy = accuracy_score(y_train_true, y_train_pred)
+                train_f1 =  f1_score(y_train_true, y_train_pred, average='macro')
+                train_precision = precision_score(y_train_true, y_train_pred, average='macro')
+                train_recall = recall_score(y_train_true, y_train_pred, average='macro')
+
+                print(classification_report(y_train_true, y_train_pred))
+
+                scores['train'].append(dT_fit)
+                scores['train'].append(dT_train_pred)
+                scores['train'].append(train_accuracy)
+                scores['train'].append(train_f1)
+                scores['train'].append(train_precision)
+                scores['train'].append(train_recall)
+
+                # evaluation with all metrics for X_train and all in X_test_sets
+                for test_set_i in range(len(X_test_sets)):
+
+                    X_test = X_test_sets[test_set_i]
+                    y_test_true = y_test_sets[test_set_i]
+
+                    t0 = datetime.datetime.now()
+                    y_test_pred = estimator.predict(X_test)
+                    dT_train_pred = datetime.datetime.now() - t0
+
+                    test_accuracy = accuracy_score(y_test_true, y_test_pred)
+                    test_f1 =  f1_score(y_test_true, y_test_pred, average='macro')
+                    test_precision = precision_score(y_test_true, y_test_pred, average='macro')
+                    test_recall = recall_score(y_test_true, y_test_pred, average='macro')
+
+                    print(classification_report(y_test_true, y_test_pred))
+
+                    scores['test'].append(dT_train_pred)
+                    scores['test'].append(test_accuracy)
+                    scores['test'].append(test_f1)
+                    scores['test'].append(test_precision)
+                    scores['test'].append(test_recall)
+
+                pp.pprint(scores)
 
                 # TODO store metrics
 
