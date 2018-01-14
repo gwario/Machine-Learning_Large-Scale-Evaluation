@@ -1,0 +1,27 @@
+{
+  "experiment": "experiment_1",
+  "stratify": true,
+  "repetitions": 3,
+  "datasets": [
+    "mammography.arff",
+    "iris.arff"
+  ],
+  "random_state": 12345,
+  "train_size": 0.6,
+  "test_splits": 2,
+  "estimators": [
+    {
+      "estimator": "ExtraTreesClassifier",
+      "params": {
+        "random_state": 12345,
+        "n_estimators": 500
+        }
+      },
+    {
+      "estimator": "RandomForestClassifier",
+      "params": {
+        "random_state": 12345,
+        "n_estimators": 500}
+        }
+    ]
+  }

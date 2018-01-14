@@ -6,6 +6,8 @@ from __future__ import print_function, absolute_import
 import logging as log
 import pprint as pp
 import os
+import sys
+import json
 import numpy as np
 import datetime
 
@@ -24,7 +26,36 @@ import report as rp
 log.basicConfig(level=log.INFO, format='%(asctime)s %(levelname)s %(message)s')
 
 
-def generate_test_sets(X_test, y_test):
+# Template for config.json
+default_config = {
+    'experiment': 'default_experiment',         # the title of the experiment
+    'stratify': True,                           # whether to stratify or not
+    'repetitions': 3,                           # number of times every estimator is run with every dataset
+    'datasets': ['speeddating.arff',            # preprocessed dataset
+                 'mammography.arff',
+                 'iris.arff',],
+    'random_state': 12345,                      # the random state used where possible
+    'train_size': 0.6,                          # size of training set
+    'test_splits': 2,                           # the number of test splits (test_size = (1-train_size)/test_spits)
+    'estimators': [                             # the estimators
+        {
+            'estimator': 'ExtraTreesClassifier',# estimator name from the list of available estimators
+            'params': {                         # estimator parameters, see scikit docs
+                'random_state': 12345,          # estimators don't use the global random_state, set it for reproducibility
+                'n_estimators': 500
+            }
+        },
+        {
+            'estimator': 'RandomForestClassifier',
+            'params': {
+                'random_state': 12345,
+                'n_estimators': 500}
+        },
+    ]
+}
+
+
+def generate_test_sets(X_test, y_test, config):
 
     log.debug("# TEST_SETS: {}".format(config['test_splits']))
     log.debug("TEST_SIZE: {}".format((1 - config['train_size']) / config['test_splits']))
@@ -38,7 +69,7 @@ def generate_test_sets(X_test, y_test):
         actual_test_size = 1 / (config['test_splits'] - test_i)
 
         X_rest, X_test_i, y_rest, y_test_i = train_test_split(X_remaining, y_remaining,
-                                                              stratify=y_remaining if stratify else None,
+                                                              stratify=y_remaining if config['stratify'] else None,
                                                               test_size=actual_test_size,
                                                               random_state=config['random_state']+repetition_i)
         X_test_sets.append(X_test_i)
@@ -62,16 +93,17 @@ def get_estimator(config):
 
     if estimator_name == 'RandomForestClassifier':
         estimator = RandomForestClassifier()
-        estimator.set_params(**estimator_params)
     elif estimator_name == 'ExtraTreesClassifier':
         estimator = ExtraTreesClassifier()
-        estimator.set_params(**estimator_params)
     elif estimator_name == 'AdaBoostClassifier':
         estimator = AdaBoostClassifier()
-        estimator.set_params(**estimator_params)
     elif estimator_name == 'DecisionTreeClassifier':
         estimator = DecisionTreeClassifier()
-        estimator.set_params(**estimator_params)
+    else:
+        raise ValueError("Unknown estimator '{}'".format(estimator_name))
+
+    estimator.set_params(**estimator_params)
+    config['params'] = estimator.get_params()
 
     return estimator
 
@@ -82,39 +114,15 @@ def get_estimator(config):
 # RandomForestClassifier, ExtraTreesClassifier, DecisionTreeClassifier, AdaBoostClassifier ...
 # TODO add more estimators
 #
+
+
 if __name__ == '__main__':
 
-    # Template for config.json
-    config = {
-        'experiment': 'experiment_1',               # the title of the experiment
-        'stratify': True,                           # whether to stratify or not
-        'repetitions': 3,                           # number of times every estimator is run with every dataset
-        'datasets': ['iris.arff',
-                     'mammography.arff',],
-                     #'speeddating.arff'],          # preprocessed dataset
-        'random_state': 12345,                      # the random state used where possible
-        'train_size': 0.6,                          # size of training set
-        'test_splits': 2,                           # the number of test splits (test_size = (1-train_size)/test_spits)
-        'estimators': [                             # the estimators
-            {
-                'estimator': 'ExtraTreesClassifier',# estimator name from the list of available estimators
-                'params': {                         # estimator parameters, see scikit docs
-                    'random_state': 12345,          # estimators don't use the global random_state, set it for reproducibility
-                    'n_estimators': 500
-                }
-            },
-            {
-                'estimator': 'RandomForestClassifier',
-                'params': {
-                    'random_state': 12345,
-                    'n_estimators': 500}
-            },
-        ]
-    }
+    config = io.load_config(sys.argv, default_config)
 
-    stratify = None
-    if config['datasets'] == True:
-        stratify = True
+    experiment_dir = config['experiment']
+    if not os.path.exists(experiment_dir):
+        os.makedirs(experiment_dir)
 
     times = pd.DataFrame(columns=['dataset_name', 'estimator_name', 'repetition', 'split', 'fit_time', 'pred_time'])
     scores = pd.DataFrame(columns=['dataset_name', 'estimator_name', 'repetition', 'split', 'accuracy', 'f1_macro', 'precision_macro', 'recall_macro'])
@@ -123,7 +131,7 @@ if __name__ == '__main__':
         log.debug("DATASET_{}: {}".format(dataset_i, dataset_filename))
 
         # load preprocessed dataset
-        X, y = io.load_data(dataset_filename, config)
+        X, y, arff_data = io.load_data(dataset_filename, config)
         dataset_name = os.path.splitext(dataset_filename)[0]
         log.info("DATASET_{}_NAME: {}".format(dataset_i, dataset_name))
 
@@ -140,14 +148,14 @@ if __name__ == '__main__':
                 log.info("REPETITION_{}".format(repetition_i))
 
                 X_train, X_test, y_train_true, y_test_true = train_test_split(X, y,
-                                                                    stratify=y if stratify else None,
+                                                                    stratify=y if config['stratify'] else None,
                                                                     train_size=config['train_size'],
                                                                     random_state=config['random_state']+repetition_i)
                 log.debug("TRAIN_SET:\n{}".format(pp.pformat(X_train)))
                 log.debug("WHOLE_TEST_SET:\n{}".format(pp.pformat(X_test)))
 
                 # generate test sets
-                X_test_sets, y_test_sets = generate_test_sets(X_test, y_test_true)
+                X_test_sets, y_test_sets = generate_test_sets(X_test, y_test_true, config)
                 log.debug("TEST_SETS:\n{}".format(pp.pformat(X_test_sets)))
 
                 t0 = datetime.datetime.now()
@@ -158,6 +166,16 @@ if __name__ == '__main__':
                 y_train_pred = estimator.predict(X_train)
                 dT_train_pred = datetime.datetime.now() - t0
 
+                # store predicted values in arff:
+                # d<dataset_id>_<dataset_name>_e<estimator_id>_<estimator_name>_r<repetition>_<set>[set_id].arff
+                X_train.loc[:, 'class'] = pd.Series(y_train_pred, index=X_train.index)
+                io.save_data_arff(X_train,
+                                  '{}/d{}_{}_e{}_{}_r{}_train.arff'.format(experiment_dir,
+                                                                           dataset_i, dataset_name,
+                                                                           estimator_i, estimator_name,
+                                                                           repetition_i),
+                                  arff_data)
+
                 train_accuracy = accuracy_score(y_train_true, y_train_pred)
                 train_f1 =  f1_score(y_train_true, y_train_pred, average='macro')
                 train_precision = precision_score(y_train_true, y_train_pred, average='macro')
@@ -165,11 +183,18 @@ if __name__ == '__main__':
 
                 log.info("Classification report for train:\n{}".format(classification_report(y_train_true, y_train_pred)))
 
-                row = pd.Series([dataset_name, estimator_name, repetition_i, "train", dT_fit, dT_train_pred],
+                row = pd.Series(["d{}_{}".format(dataset_i, dataset_name),
+                                 "e{}_{}".format(estimator_i, estimator_name),
+                                 "r{}".format(repetition_i),
+                                 "train",
+                                 dT_fit, dT_train_pred],
                                 index=['dataset_name', 'estimator_name', 'repetition', 'split', 'fit_time', 'pred_time'])
                 times = times.append(row, ignore_index=True)
 
-                row = pd.Series([dataset_name, estimator_name, repetition_i, "train",
+                row = pd.Series(["d{}_{}".format(dataset_i, dataset_name),
+                                 "e{}_{}".format(estimator_i, estimator_name),
+                                 "r{}".format(repetition_i),
+                                 "train",
                                  train_accuracy, train_f1, train_precision, train_recall],
                                 index=['dataset_name', 'estimator_name', 'repetition', 'split',
                                        'accuracy', 'f1_macro', 'precision_macro', 'recall_macro'])
@@ -185,6 +210,14 @@ if __name__ == '__main__':
                     y_test_pred = estimator.predict(X_test)
                     dT_train_pred = datetime.datetime.now() - t0
 
+                    X_test.loc[:, 'class'] = pd.Series(y_test_pred, index=X_test.index)
+                    io.save_data_arff(X_test,
+                                      '{}/d{}_{}_e{}_{}_r{}_test{}.arff'.format(experiment_dir,
+                                                                                dataset_i, dataset_name,
+                                                                                estimator_i, estimator_name,
+                                                                                repetition_i, test_set_i),
+                                      arff_data)
+
                     test_accuracy = accuracy_score(y_test_true, y_test_pred)
                     test_f1 =  f1_score(y_test_true, y_test_pred, average='macro')
                     test_precision = precision_score(y_test_true, y_test_pred, average='macro')
@@ -192,13 +225,19 @@ if __name__ == '__main__':
 
                     log.info("Classification report for test_{}:\n{}".format(test_set_i, classification_report(y_test_true, y_test_pred)))
 
-                    row = pd.Series([dataset_name, estimator_name, repetition_i, "test_{}".format(test_set_i),
+                    row = pd.Series(["d{}_{}".format(dataset_i, dataset_name),
+                                     "e{}_{}".format(estimator_i, estimator_name),
+                                     "r{}".format(repetition_i),
+                                     "test{}".format(test_set_i),
                                      dT_fit, dT_train_pred],
                                     index=['dataset_name', 'estimator_name', 'repetition', 'split',
                                            'fit_time', 'pred_time'])
                     times = times.append(row, ignore_index=True)
 
-                    row = pd.Series([dataset_name, estimator_name, repetition_i, "test_{}".format(test_set_i),
+                    row = pd.Series(["d{}_{}".format(dataset_i, dataset_name),
+                                     "e{}_{}".format(estimator_i, estimator_name),
+                                     "r{}".format(repetition_i),
+                                     "test{}".format(test_set_i),
                                      test_accuracy, test_f1, test_precision, test_recall],
                                     index=['dataset_name', 'estimator_name', 'repetition', 'split',
                                            'accuracy', 'f1_macro', 'precision_macro', 'recall_macro'])
@@ -209,8 +248,9 @@ if __name__ == '__main__':
     #pp.pprint(times)
 
     # store metrics
-    io.save_data(scores, 'evaluation_scores.csv')
-    io.save_data(times, 'evaluation_times.csv')
+    io.save_config(config, experiment_dir+'/config.json')
+    io.save_data(scores, experiment_dir+'/evaluation_scores.csv')
+    io.save_data(times, experiment_dir+'/evaluation_times.csv')
 
     # TODO calculate mean and stdev among repetitions
 

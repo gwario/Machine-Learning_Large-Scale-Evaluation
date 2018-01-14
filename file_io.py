@@ -3,7 +3,7 @@ import os.path
 import json
 import numpy as np
 import arff
-from scipy.io import arff
+#from scipy.io import arff
 from pprint import pprint, pformat
 import pandas as pd
 from sklearn.externals import joblib
@@ -108,8 +108,9 @@ def load_data(data_file, config):
 
     elif data_file == 'iris.arff':
 
-        data, meta = arff.loadarff(data_file)
-        df = pd.DataFrame(data)
+        #data, meta = arff.loadarff(data_file)
+        data = arff.load(open(data_file))
+        df = pd.DataFrame(data['data'], columns=[name for (name, type) in data['attributes']])
         df = df.sample(frac=1, random_state=config['random_state'])
         if DATASET_LESS_DATA:
             log.warning("Using at most {} instances.".format(DATASET_INSTANCE_CAP_CNT))
@@ -119,18 +120,17 @@ def load_data(data_file, config):
 
         X = df.loc[:, ['sepallength', 'sepalwidth', 'petallength', 'petalwidth']]
         y = df.loc[:, ['class']].values.ravel()
-        y = [element.decode('utf-8') for element in y]
+        #y = [element.decode('utf-8') for element in y]
         #y = df.loc[:, ['class']]
 
-        return X, y
+        return X, y, data
 
     elif data_file == 'mammography.arff':
 
-        data, meta = arff.loadarff(data_file)
-        df = pd.DataFrame(data)
-        #pprint(df)
+        #data, meta = arff.loadarff(data_file)
+        data = arff.load(open(data_file))
+        df = pd.DataFrame(data['data'], columns=[name for (name, type) in data['attributes']])
         df = df.sample(frac=1, random_state=config['random_state'])
-        #pprint(df)
         if DATASET_LESS_DATA:
             log.warning("Using at most {} instances.".format(DATASET_INSTANCE_CAP_CNT))
             df.drop(df.index[:-DATASET_INSTANCE_CAP_CNT], inplace=True)
@@ -139,13 +139,13 @@ def load_data(data_file, config):
 
         X = df.loc[:, ['attr1', 'attr2', 'attr3', 'attr4', 'attr5', 'attr6']]
         y = df.loc[:, ['class']].values.ravel()
-        y = [element.decode('utf-8') for element in y]
+        #y = [element.decode('utf-8') for element in y]
 
-        return X, y
+        return X, y, data
 
     elif data_file == 'speeddating.arff':
 
-        data, meta = arff.loadarff(data_file)
+        #data, meta = arff.loadarff(data_file)
         df = pd.DataFrame(data)
         df = df.sample(frac=1, random_state=config['random_state'])
         if DATASET_LESS_DATA:
@@ -160,6 +160,17 @@ def load_data(data_file, config):
         # TODO preprocessing
 
         return X, y
+
+
+def load_config(argv, default_config):
+
+    if len(argv) > 1:
+        with open(argv[1], 'r') as config_file:
+            log.info("Using configuration from: {}".format(config_file.name))
+            return json.load(config_file)
+    else:
+        log.warning("Using default config.")
+        return default_config
 
 
 def load_model(model_file):
@@ -181,6 +192,17 @@ def save_data(dataset, dataset_filename):
     """Saves the dataset to dataset_filename."""
 
     dataset.to_csv(dataset_filename, sep=',', index=False, encoding='utf-8')
+    print("Dataset saved as {}".format(dataset_filename))
+
+
+def save_data_arff(dataset, dataset_filename, arff_data):
+    """Saves the dataset, arff-formatted, to dataset_filename."""
+    #pprint(arff_data)
+    #print(dataset)
+    #print(type(arff_data['data']))
+    arff_data['data'] = dataset.values.tolist()
+    #print(type(arff_data['data']))
+    arff.dump(arff_data, open(dataset_filename, 'w'))
     print("Dataset saved as {}".format(dataset_filename))
 
 
@@ -231,3 +253,10 @@ def store_hyper_parameters(parameters, filename, working_dir):
         json.dump(parameters, outfile)
 
     print("Saved hyper-parameters as {}".format(os.path.join(filename, working_dir)))
+
+
+def save_config(config, file_name):
+    """Stores the actual configuration."""
+
+    with open(file_name, 'w') as outfile:
+        json.dump(config, outfile)
