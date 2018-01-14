@@ -5,6 +5,7 @@ from __future__ import print_function, absolute_import
 
 import logging as log
 import pprint as pp
+import os
 import numpy as np
 import datetime
 
@@ -21,8 +22,6 @@ import report as rp
 
 # Display progress logs on stdout
 log.basicConfig(level=log.INFO, format='%(asctime)s %(levelname)s %(message)s')
-
-random_state = 12345
 
 
 def generate_test_sets(X_test, y_test):
@@ -41,7 +40,7 @@ def generate_test_sets(X_test, y_test):
         X_rest, X_test_i, y_rest, y_test_i = train_test_split(X_remaining, y_remaining,
                                                               stratify=y_remaining if stratify else None,
                                                               test_size=actual_test_size,
-                                                              random_state=random_state+repetition_i)
+                                                              random_state=config['random_state']+repetition_i)
         X_test_sets.append(X_test_i)
         y_test_sets.append(y_test_i)
 
@@ -89,24 +88,27 @@ if __name__ == '__main__':
     config = {
         'experiment': 'experiment_1',               # the title of the experiment
         'stratify': True,                           # whether to stratify or not
-        'repetitions': 1,                           # number of times every estimator is run with every dataset
-        'datasets': ['iris.arff',],
-                     #'mammography.arff',
+        'repetitions': 3,                           # number of times every estimator is run with every dataset
+        'datasets': ['iris.arff',
+                     'mammography.arff',],
                      #'speeddating.arff'],          # preprocessed dataset
+        'random_state': 12345,                      # the random state used where possible
         'train_size': 0.6,                          # size of training set
         'test_splits': 2,                           # the number of test splits (test_size = (1-train_size)/test_spits)
         'estimators': [                             # the estimators
             {
                 'estimator': 'ExtraTreesClassifier',# estimator name from the list of available estimators
                 'params': {                         # estimator parameters, see scikit docs
-                    'random_state': random_state,
+                    'random_state': 12345,          # estimators don't use the global random_state, set it for reproducibility
                     'n_estimators': 500
                 }
             },
-            #{
-            #    'estimator': 'ExtraTreesClassifier',
-            #    'params': {}
-            #},
+            {
+                'estimator': 'RandomForestClassifier',
+                'params': {
+                    'random_state': 12345,
+                    'n_estimators': 500}
+            },
         ]
     }
 
@@ -114,69 +116,24 @@ if __name__ == '__main__':
     if config['datasets'] == True:
         stratify = True
 
-    result = [{'dataset': '<filename_0>',
-               'results': [{'algorithm': '<algo_name_0>',
-                            'iterations': [{'iteration': 0,
-                                            'metrics': ['fit_time', 'test_0_time', 'test_1_time',
-                                                        'train_accuracy', 'test_0_accuracy', '<test_0_accuracy>',
-                                                        '...']},
-                                           {'iteration': 1,
-                                            'metrics': ['<fit_time>', '<test_0_time>', '<test_1_time>',
-                                                        '<train_accuracy>', '<test_0_accuracy>', '<test_1_accuracy>',
-                                                        '...']}
-                                           ],
-                            },
-                            {'algorithm': '<algo_name_1>',
-                             'iterations': [{'iteration': 0,
-                                             'metrics': ['fit_time', 'test_0_time', 'test_1_time',
-                                                         'train_accuracy', 'test_0_accuracy', '<test_0_accuracy>',
-                                                         '...']},
-                                            {'iteration': 1,
-                                             'metrics': ['<fit_time>', '<test_0_time>', '<test_1_time>',
-                                                         '<train_accuracy>', '<test_0_accuracy>', '<test_1_accuracy>',
-                                                         '...']}
-                                            ],
-                             },
-                           ]
-               },
-              {'dataset': '<filename_0>',
-               'results': [{'algorithm': '<algo_name_0>',
-                            'iterations': [{'iteration': 0,
-                                            'metrics': ['fit_time', 'test_0_time', 'test_1_time',
-                                                        'train_accuracy', 'test_0_accuracy', '<test_0_accuracy>',
-                                                        '...']},
-                                           {'iteration': 1,
-                                            'metrics': ['<fit_time>', '<test_0_time>', '<test_1_time>',
-                                                        '<train_accuracy>', '<test_0_accuracy>', '<test_1_accuracy>',
-                                                        '...']}
-                                           ],
-                            },
-                           {'algorithm': '<algo_name_1>',
-                            'iterations': [{'iteration': 0,
-                                            'metrics': ['fit_time', 'test_0_time', 'test_1_time',
-                                                        'train_accuracy', 'test_0_accuracy', '<test_0_accuracy>',
-                                                        '...']},
-                                           {'iteration': 1,
-                                            'metrics': ['<fit_time>', '<test_0_time>', '<test_1_time>',
-                                                        '<train_accuracy>', '<test_0_accuracy>', '<test_1_accuracy>',
-                                                        '...']}
-                                           ],
-                            },
-                           ]
-               },
-              ]
+    times = pd.DataFrame(columns=['dataset_name', 'estimator_name', 'repetition', 'split', 'fit_time', 'pred_time'])
+    scores = pd.DataFrame(columns=['dataset_name', 'estimator_name', 'repetition', 'split', 'accuracy', 'f1_macro', 'precision_macro', 'recall_macro'])
 
-    for dataset_filename in config['datasets']:
-        log.info("DATASET: {}".format(dataset_filename))
+    for dataset_i, dataset_filename in enumerate(config['datasets']):
+        log.debug("DATASET_{}: {}".format(dataset_i, dataset_filename))
 
         # load preprocessed dataset
-        X, y = io.load_data(dataset_filename)
+        X, y = io.load_data(dataset_filename, config)
+        dataset_name = os.path.splitext(dataset_filename)[0]
+        log.info("DATASET_{}_NAME: {}".format(dataset_i, dataset_name))
 
         for estimator_i, estimator in enumerate(config['estimators']):
-            log.info("ESTIMATOR_{}: {}".format(estimator_i, estimator['estimator']))
+            log.debug("ESTIMATOR_{}: {}".format(estimator_i, estimator['estimator']))
 
             # load algorithm
             estimator = get_estimator(estimator)
+            estimator_name = estimator.__class__.__name__
+            log.info("ESTIMATOR_{}_NAME: {}".format(estimator_i, estimator_name))
 
             # for every repetition
             for repetition_i in range(config['repetitions']):
@@ -185,17 +142,13 @@ if __name__ == '__main__':
                 X_train, X_test, y_train_true, y_test_true = train_test_split(X, y,
                                                                     stratify=y if stratify else None,
                                                                     train_size=config['train_size'],
-                                                                    random_state=random_state+repetition_i)
+                                                                    random_state=config['random_state']+repetition_i)
                 log.debug("TRAIN_SET:\n{}".format(pp.pformat(X_train)))
-                log.debug("TEST_SET:\n{}".format(pp.pformat(X_test)))
+                log.debug("WHOLE_TEST_SET:\n{}".format(pp.pformat(X_test)))
 
                 # generate test sets
                 X_test_sets, y_test_sets = generate_test_sets(X_test, y_test_true)
-                log.info("TEST_SETS:\n{}".format(pp.pformat(X_test_sets)))
-
-                # fit_time, train_pred_time, train_accuracy, test_0_pred_time, test_0_accuracy, ...
-                scores = { 'train': [],
-                           'test': []}
+                log.debug("TEST_SETS:\n{}".format(pp.pformat(X_test_sets)))
 
                 t0 = datetime.datetime.now()
                 estimator.fit(X_train, y_train_true)
@@ -210,14 +163,17 @@ if __name__ == '__main__':
                 train_precision = precision_score(y_train_true, y_train_pred, average='macro')
                 train_recall = recall_score(y_train_true, y_train_pred, average='macro')
 
-                print(classification_report(y_train_true, y_train_pred))
+                log.info("Classification report for train:\n{}".format(classification_report(y_train_true, y_train_pred)))
 
-                scores['train'].append(dT_fit)
-                scores['train'].append(dT_train_pred)
-                scores['train'].append(train_accuracy)
-                scores['train'].append(train_f1)
-                scores['train'].append(train_precision)
-                scores['train'].append(train_recall)
+                row = pd.Series([dataset_name, estimator_name, repetition_i, "train", dT_fit, dT_train_pred],
+                                index=['dataset_name', 'estimator_name', 'repetition', 'split', 'fit_time', 'pred_time'])
+                times = times.append(row, ignore_index=True)
+
+                row = pd.Series([dataset_name, estimator_name, repetition_i, "train",
+                                 train_accuracy, train_f1, train_precision, train_recall],
+                                index=['dataset_name', 'estimator_name', 'repetition', 'split',
+                                       'accuracy', 'f1_macro', 'precision_macro', 'recall_macro'])
+                scores = scores.append(row, ignore_index=True)
 
                 # evaluation with all metrics for X_train and all in X_test_sets
                 for test_set_i in range(len(X_test_sets)):
@@ -234,27 +190,39 @@ if __name__ == '__main__':
                     test_precision = precision_score(y_test_true, y_test_pred, average='macro')
                     test_recall = recall_score(y_test_true, y_test_pred, average='macro')
 
-                    print(classification_report(y_test_true, y_test_pred))
+                    log.info("Classification report for test_{}:\n{}".format(test_set_i, classification_report(y_test_true, y_test_pred)))
 
-                    scores['test'].append(dT_train_pred)
-                    scores['test'].append(test_accuracy)
-                    scores['test'].append(test_f1)
-                    scores['test'].append(test_precision)
-                    scores['test'].append(test_recall)
+                    row = pd.Series([dataset_name, estimator_name, repetition_i, "test_{}".format(test_set_i),
+                                     dT_fit, dT_train_pred],
+                                    index=['dataset_name', 'estimator_name', 'repetition', 'split',
+                                           'fit_time', 'pred_time'])
+                    times = times.append(row, ignore_index=True)
 
-                pp.pprint(scores)
+                    row = pd.Series([dataset_name, estimator_name, repetition_i, "test_{}".format(test_set_i),
+                                     test_accuracy, test_f1, test_precision, test_recall],
+                                    index=['dataset_name', 'estimator_name', 'repetition', 'split',
+                                           'accuracy', 'f1_macro', 'precision_macro', 'recall_macro'])
+                    scores = scores.append(row, ignore_index=True)
 
-                # TODO store metrics
 
-                # TODO create output directory with config.experiment
-                # TODO store entire config (actual estimator params)
-                # TODO store results arff
-                # TODO store results diagrams
+    #pp.pprint(scores)
+    #pp.pprint(times)
 
-                # TODO arff output template
-                # dataset, algorithm, repetition_index, split_index, metric1, metric2, metric3
+    # store metrics
+    io.save_data(scores, 'evaluation_scores.csv')
+    io.save_data(times, 'evaluation_times.csv')
 
-                # TODO generate diagrams (maybe external script?)
+    # TODO calculate mean and stdev among repetitions
+
+    # TODO create output directory with config.experiment
+    # TODO store entire config (actual estimator params)
+    # TODO store results arff
+    # TODO store results diagrams
+
+    # TODO arff output template
+    # dataset, algorithm, repetition_index, split_index, metric1, metric2, metric3
+
+    # TODO generate diagrams (maybe external script?)
 
     #mode = 'hpsearch'
     mode = 'evaluate'
@@ -393,6 +361,6 @@ if __name__ == '__main__':
         w = pd.DataFrame({'test_r2': r2_test_w, 'test_mean_squared_error': mean_squared_error_test_w})
         a = pd.DataFrame({'test_r2': r2_test_a, 'test_mean_squared_error': mean_squared_error_test_a})
 
-        io.save_data(r, 'et_wqTaEr_sel{}_def_ttsr{}_evaluation_scores.csv'.format(selector.get_params()['k'], eval_cv.get_n_splits()))
+
         io.save_data(w, 'et_wqTaEw_sel{}_def_ttsr{}_evaluation_scores.csv'.format(selector.get_params()['k'], eval_cv.get_n_splits()))
         io.save_data(a, 'et_wqTaEa_sel{}_def_ttsr{}_evaluation_scores.csv'.format(selector.get_params()['k'], eval_cv.get_n_splits()))

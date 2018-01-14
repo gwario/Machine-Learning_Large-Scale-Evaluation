@@ -38,12 +38,12 @@ sp_target = 'Grade'
 ch_target = 'prp'
 ch_features = ['myct', 'mmin', 'mmax', 'cach', 'chmin', 'chmax']
 
-
+# use at most DATASET_INSTANCE_CAP_PCT of the instances
 DATASET_LESS_DATA = True
-DATASET_INSTANCE_CAP_PCT = 100
+DATASET_INSTANCE_CAP_CNT = 1000
 
 
-def load_data(data_file):
+def load_data(data_file, config):
     """Loads the input data from data_file."""
 
     log.debug("Loading data...")
@@ -110,18 +110,16 @@ def load_data(data_file):
 
         data, meta = arff.loadarff(data_file)
         df = pd.DataFrame(data)
-        df = df.sample(frac=1)
+        df = df.sample(frac=1, random_state=config['random_state'])
         if DATASET_LESS_DATA:
-            log.warning("Using at most {} instances.".format(DATASET_INSTANCE_CAP_PCT))
-            df.drop(df.index[:-100], inplace=True)
+            log.warning("Using at most {} instances.".format(DATASET_INSTANCE_CAP_CNT))
+            df.drop(df.index[:-DATASET_INSTANCE_CAP_CNT], inplace=True)
 
         df.info()
 
         X = df.loc[:, ['sepallength', 'sepalwidth', 'petallength', 'petalwidth']]
         y = df.loc[:, ['class']].values.ravel()
-        #pprint(y)
         y = [element.decode('utf-8') for element in y]
-        #pprint(y)
         #y = df.loc[:, ['class']]
 
         return X, y
@@ -130,15 +128,18 @@ def load_data(data_file):
 
         data, meta = arff.loadarff(data_file)
         df = pd.DataFrame(data)
-        df = df.sample(frac=1)
+        #pprint(df)
+        df = df.sample(frac=1, random_state=config['random_state'])
+        #pprint(df)
         if DATASET_LESS_DATA:
-            log.warning("Using at most {} instances.".format(DATASET_INSTANCE_CAP_PCT))
-            df.drop(df.index[:-100], inplace=True)
+            log.warning("Using at most {} instances.".format(DATASET_INSTANCE_CAP_CNT))
+            df.drop(df.index[:-DATASET_INSTANCE_CAP_CNT], inplace=True)
 
         df.info()
 
         X = df.loc[:, ['attr1', 'attr2', 'attr3', 'attr4', 'attr5', 'attr6']]
         y = df.loc[:, ['class']].values.ravel()
+        y = [element.decode('utf-8') for element in y]
 
         return X, y
 
@@ -146,10 +147,10 @@ def load_data(data_file):
 
         data, meta = arff.loadarff(data_file)
         df = pd.DataFrame(data)
-        df = df.sample(frac=1)
+        df = df.sample(frac=1, random_state=config['random_state'])
         if DATASET_LESS_DATA:
-            log.warning("Using at most {} instances.".format(DATASET_INSTANCE_CAP_PCT))
-            df.drop(df.index[:-100], inplace=True)
+            log.warning("Using at most {} instances.".format(DATASET_INSTANCE_CAP_CNT))
+            df.drop(df.index[:-DATASET_INSTANCE_CAP_CNT], inplace=True)
 
         df.info()
 
