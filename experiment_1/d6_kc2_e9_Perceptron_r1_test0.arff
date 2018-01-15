@@ -1,0 +1,455 @@
+% %-*- text -*-
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% This is a PROMISE Software Engineering Repository data set made publicly
+% available in order to encourage repeatable, verifiable, refutable, and/or
+% improvable predictive models of software engineering.
+% 
+% If you publish material based on PROMISE data sets then, please
+% follow the acknowledgment guidelines posted on the PROMISE repository
+% web page http://promise.site.uottawa.ca/SERepository .
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% 1. Title/Topic: KC2/software defect prediction
+% 2. Sources:
+% 
+%    -- Creators:  NASA, then the NASA Metrics Data Program,
+%       -- http://mdp.ivv.nasa.gov. Contacts: Mike Chapman,
+%          Galaxy Global Corporation (Robert.Chapman@ivv.nasa.gov)
+%          +1-304-367-8341; Pat Callis, NASA, NASA project manager
+%          for MDP (Patrick.E.Callis@ivv.nasa.gov) +1-304-367-8309
+% 
+%    -- Donor: Tim Menzies (tim@barmag.net)
+% 
+%    -- Date:  December 2 2004
+% 3. Past usage:
+% 
+%    1. How Good is Your Blind  Spot Sampling Policy?; 2003; Tim Menzies
+%       and Justin S. Di Stefano; 2004 IEEE Conference on High Assurance
+%       Software Engineering (http://menzies.us/pdf/03blind.pdf).
+% 
+%       -- Results:
+% 
+%         -- Very simple learners (ROCKY) perform as well in this domain
+%         as more sophisticated methods (e.g. J48, model trees, model
+%         trees) for predicting detects
+% 
+%         -- Many learners have very low false alarm rates.
+% 
+% 	  -- Probability of detection (PD) rises with effort and rarely
+% 	  rises above it.
+% 
+%         -- High PDs are associated with high PFs (probability of
+%         failure)
+% 
+%         -- PD, PF, effort can change significantly while accuracy
+%         remains essentially stable
+% 
+%         -- With two notable exceptions, detectors learned from one
+%         data set (e.g. KC2) have nearly they same properties when
+%         applied to another (e.g. PC2, KC2). Exceptions:
+%            -- LinesOfCode measures generate wider inter-data-set variances;
+%            -- Precision's inter-data-set variances vary wildly
+% 
+%    2. "Assessing Predictors of Software Defects", T. Menzies and
+%       J. DiStefano and A. Orrego and R. Chapman, 2004,
+%       Proceedings, workshop on Predictive Software Models, Chicago,
+%       Available from http://menzies.us/pdf/04psm.pdf.
+%       -- Results:
+% 
+%          -- From KC2, Naive Bayes generated PDs of 50% with PF of 10%
+% 
+%          -- Naive Bayes out-performs J48 for defect detection
+% 
+%          -- When learning on more and more data, little improvement is
+%             seen after processing 300 examples.
+% 
+%          -- PDs are much higher from data collected below the sub-sub-
+%             system level.
+% 
+%          -- Accuracy is a surprisingly uninformative measure of success
+%             for a defect detector. Two detectors with the same accuracy
+%             can have widely varying PDs and PFs.
+% 4. Relevant information:
+% 
+%    -- Data from C++ functions. Science data processing; another part
+%    of the same project as KC1; different personnel than KC1.  Shared
+%    some third-party software libraries with KC1, but no other software
+%    overlap.
+% 
+%    -- Data comes from McCabe and Halstead features extractors of
+%    source code.  These features were defined in the 70s in an attempt
+%    to objectively characterize code features that are associated with
+%    software quality.  The nature of association is under dispute.
+%    Notes on McCabe and Halstead follow.
+% 
+%    -- The McCabe and Halstead measures are "module"-based where a
+%    "module" is the smallest unit of functionality. In C or Smalltalk,
+%    "modules" would be called "function" or "method" respectively.
+% 
+%    -- Defect detectors can be assessed according to the following measures:
+% 
+%                                                module actually has defects
+%                                               +-------------+------------+
+%                                               |     no      |     yes    |
+%                                         +-----+-------------+------------+
+%          classifier predicts no defects |  no |      a      |      b     |
+%                                         +-----+-------------+------------+
+%        classifier predicts some defects | yes |      c      |      d     |
+%                                         +-----+-------------+------------+
+% 
+%        accuracy                   = acc          = (a+d)/(a+b+c+d
+%        probability of detection   = pd  = recall = d/(b+d)
+%        probability of false alarm = pf           = c/(a+c)
+%        precision                  = prec         = d/(c+d)
+%        effort                     = amount of code selected by detector
+%                                   = (c.LOC + d.LOC)/(Total LOC)
+% 
+%        Ideally, detectors have high PDs, low PFs, and low
+%        effort. This ideal state rarely happens:
+% 
+%        -- PD and effort are linked. The more modules that trigger
+%        the detector, the higher the PD. However, effort also gets
+%        increases
+% 
+%        -- High PD or low PF comes at the cost of high PF or low PD
+%        (respectively). This linkage can be seen in a standard
+%        receiver operator curve (ROC).  Suppose, for example, LOC> x
+%        is used as the detector (i.e. we assume large modules have
+%        more errors). LOC > x represents a family of detectors. At
+%        x=0, EVERY module is predicted to have errors. This detector
+%        has a high PD but also a high false alarm rate. At x=0, NO
+%        module is predicted to have errors. This detector has a low
+%        false alarm rate but won't detect anything at all. At 0<x<1,
+%        a set of detectors are generated as shown below:
+% 
+%                 pd
+%               1 |           x  x  x                KEY:
+%                 |        x     .                   "."  denotes the line PD=PF
+%                 |     x      .                     "x"  denotes the roc curve
+%                 |   x      .                            for a set of detectors
+%                 |  x     .
+%                 | x    .
+%                 | x  .
+%                 |x .
+%                 |x
+%                 x------------------ pf
+%                0                   1
+% 
+%         Note that:
+% 
+%         -- The only way to make no mistakes (PF=0) is to do nothing
+%        (PD=0)
+% 
+%         -- The only way to catch more detects is to make more
+%         mistakes (increasing PD means increasing PF).
+% 
+%         -- Our detector bends towards the "sweet spot" of
+%         <PD=1,PF=0> but does not reach it.
+% 
+%         -- The line pf=pd on the above graph represents the "no information"
+%         line. If pf=pd then the detector is pretty useless. The better
+%         the detector, the more it rises above PF=PD towards the "sweet spot".
+% 
+%    NOTES ON MCCABE/HALSTEAD
+%    ========================
+%    McCabe argued that code with complicated pathways are more
+%    error-prone.  His metrics therefore reflect the pathways within a
+%    code module.
+%       @Article{mccabe76,
+%   		title 	= "A Complexity Measure",
+%   		author 	= "T.J. McCabe",
+%   		pages 	= "308--320",
+%   		journal = "IEEE Transactions on Software Engineering",
+%   		year 	= "1976",
+%   		volume 	= "2",
+%   		month 	= "December",
+%   		number 	= "4"}
+% 
+%    Halstead argued that code that is hard to read is more likely to be
+%    fault prone. Halstead estimates reading complexity by counting the
+%    number of concepts in a module; e.g. number of unique operators.
+%       @Book{halstead77,
+%   		Author 	  = "M.H. Halstead",
+%   		Title 	  = "Elements of Software Science",
+%   		Publisher = "Elsevier ",
+%   		Year 	  = 1977}
+% 
+%    We study these static code measures since they are useful, easy to
+%    use, and widely used:
+% 
+%     -- USEFUL: E.g. this data set can generate highly accurate
+%     predictors for defects
+% 
+%     -- EASY TO USE: Static code measures (e.g. lines of code, the
+%     McCabe/Halstead measures) can be automatically and cheaply
+%     collected.
+% 
+%     -- WIDELY USED: Many researchers use static measures to guide
+%     software quality predictions (see the reference list in the above
+%     "blind spot" paper. Verification and validation (V\&V) textbooks
+%     advise using static code complexity measures to decide which
+%     modules are worthy of manual inspections.  Further, we know of
+%     several large government software contractors that won't review
+%     software modules _unless_ tools like McCabe predict that they are
+%     fault prone.  Hence, defect detectors have a major economic impact
+%     when they may force programmers to rewrite code.
+% 
+%     Nevertheless, the merits of these metrics has been widely
+%     criticized.  Static code measures are hardly a complete
+%     characterization of the internals of a function. Fenton offers an
+%     insightful example where the same functionality is achieved using
+%     different programming language constructs resulting in different
+%     static measurements for that module. Fenton uses this example to
+%     argue the uselessness of static code measures.
+%          @book{fenton97,
+%            author    = "N.E. Fenton and S.L. Pfleeger",
+%            title     = {Software metrics: a Rigorous \& Practical Approach},
+%            publisher = {International Thompson Press},
+%            year      = {1997}}
+% 
+%     An alternative interpretation of Fenton's example is that static
+%     measures can never be a definite and certain indicator of the
+%     presence of a fault.  Rather, defect detectors based on static
+%     measures are best viewed as probabilistic statements that the
+%     frequency of faults tends to increase in code modules that trigger
+%     the detector.  By definition, such probabilistic statements will
+%     are not categorical claims with some a non-zero false alarm
+%     rate. The research challenge for data miners is to ensure that
+%     these false alarms do not cripple their learned theories.
+% 
+%     The McCabe metrics are a collection of four software metrics:
+%     essential complexity, cyclomatic complexity, design complexity and
+%     LOC, Lines of Code.
+% 
+%     -- Cyclomatic Complexity, or "v(G)", measures the number of
+%     "linearly independent paths". A set of paths is said to be
+%     linearly independent if no path in the set is a linear combination
+%     of any other paths in the set through a program's "flowgraph". A
+%     flowgraph is a directed graph where each node corresponds to a
+%     program statement, and each arc indicates the flow of control from
+%     one statement to another. "v(G)" is calculated by "v(G) = e - n + 2"
+%     where "G" is a program's flowgraph, "e" is the number of arcs in
+%     the flowgraph, and "n" is the number of nodes in the
+%     flowgraph. The standard McCabes rules ("v(G)">10), are used to
+%     identify fault-prone module.
+% 
+%     -- Essential Complexity, or "ev(G)$" is the extent to which a
+%     flowgraph can be "reduced" by decomposing all the subflowgraphs
+%     of $G$ that are "D-structured primes". Such "D-structured
+%     primes" are also sometimes referred to as "proper one-entry
+%     one-exit subflowgraphs" (for a more thorough discussion of
+%     D-primes, see the Fenton text referenced above). "ev(G)" is
+%     calculated using "ev(G)= v(G) - m" where $m$ is the number of
+%     subflowgraphs of "G" that are D-structured primes.
+% 
+%     -- Design Complexity, or "iv(G)", is the cyclomatic complexity of a
+%     module's reduced flowgraph.  The flowgraph, "G", of a module is
+%     reduced to eliminate any complexity which does not influence the
+%     interrelationship between design modules.  According to McCabe,
+%     this complexity measurement reflects the modules calling patterns
+%     to its immediate subordinate modules.
+% 
+%     -- Lines of code is measured according to McCabe's line counting
+%     conventions.
+% 
+%     The Halstead falls into three groups: the base measures, the
+%     derived measures, and lines of code measures.
+% 
+%     -- Base measures:
+%        -- mu1             = number of unique operators
+%        -- mu2             = number of unique operands
+%        -- N1              = total occurrences of operators
+%        -- N2              = total occurrences of operands
+%        -- length     = N  = N1 + N2
+%        -- vocabulary = mu = mu1 + mu2
+%        -- Constants set for each function:
+%           -- mu1' =  2 = potential operator count (just the function
+%                          name and the "return" operator)
+%           -- mu2'      = potential operand count. (the number
+%                          of arguments to the module)
+% 
+%        For example, the expression "return max(w+x,x+y)" has "N1=4"
+%        operators "return, max, +,+)", "N2=4" operands (w,x,x,y),
+%        "mu1=3" unique operators (return, max,+), and "mu2=3" unique
+%        operands (w,x,y).
+% 
+%      -- Derived measures:
+%         -- P = volume = V = N * log2(mu) (the number of mental
+%                                           comparisons needed to write
+%                                           a program of length N)
+%         -- V* = volume on minimal implementation
+%               = (2 + mu2')*log2(2 + mu2')
+%         -- L  = program length = V*/N
+%         -- D  = difficulty = 1/L
+%         -- L' = 1/D
+%         -- I  = intelligence = L'*V'
+%         -- E  = effort to write program = V/L
+%         -- T  = time to write program = E/18 seconds
+% 5. Number of instances: 522
+% 6. Number of attributes: 22 (5 different lines of code measure,
+%          3 McCabe metrics, 4 base Halstead measures, 8 derived
+%           Halstead measures, a branch-count, and 1 goal field)
+% 7. Attribute Information:
+% 
+% 	
+%      1. loc             : numeric % McCabe's line count of code
+%      2. v(g)            : numeric % McCabe "cyclomatic complexity"
+%      3. ev(g)           : numeric % McCabe "essential complexity"
+%      4. iv(g)           : numeric % McCabe "design complexity"
+%      5. n               : numeric % Halstead total operators + operands
+%      6. v               : numeric % Halstead "volume"
+%      7. l               : numeric % Halstead "program length"
+%      8. d               : numeric % Halstead "difficulty"
+%      9. i               : numeric % Halstead "intelligence"
+%     10. e               : numeric % Halstead "effort"
+%     11. b               : numeric % Halstead
+%     12. t               : numeric % Halstead's time estimator
+%     13. lOCode          : numeric % Halstead's line count
+%     14. lOComment       : numeric % Halstead's count of lines of comments
+%     15. lOBlank         : numeric % Halstead's count of blank lines
+%     16. lOCodeAndComment: numeric
+%     17. uniq_Op         : numeric % unique operators
+%     18. uniq_Opnd       : numeric % unique operands
+%     19. total_Op        : numeric % total operators
+%     20. total_Opnd      : numeric % total operands
+%     21: branchCount     : numeric % of the flow graph
+%     22. problems        : {no,yes}% module has/has not one or more
+%                                   % reported defects
+% 8. Missing attributes: none
+% 9. Class Distribution: the class value (problems) is discrete
+%    yes: 105 = 20.5%
+%    no:  415 = 79.5%
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+@RELATION KC2
+
+@ATTRIBUTE loc NUMERIC
+@ATTRIBUTE v(g) NUMERIC
+@ATTRIBUTE ev(g) NUMERIC
+@ATTRIBUTE iv(g) NUMERIC
+@ATTRIBUTE n NUMERIC
+@ATTRIBUTE v NUMERIC
+@ATTRIBUTE l NUMERIC
+@ATTRIBUTE d NUMERIC
+@ATTRIBUTE i NUMERIC
+@ATTRIBUTE e NUMERIC
+@ATTRIBUTE b NUMERIC
+@ATTRIBUTE t NUMERIC
+@ATTRIBUTE lOCode NUMERIC
+@ATTRIBUTE lOComment NUMERIC
+@ATTRIBUTE lOBlank NUMERIC
+@ATTRIBUTE lOCodeAndComment NUMERIC
+@ATTRIBUTE uniq_Op NUMERIC
+@ATTRIBUTE uniq_Opnd NUMERIC
+@ATTRIBUTE total_Op NUMERIC
+@ATTRIBUTE total_Opnd NUMERIC
+@ATTRIBUTE branchCount NUMERIC
+@ATTRIBUTE problems {no, yes}
+
+@DATA
+89.0,13.0,6.0,7.0,239.0,1417.45,0.05,20.3,69.82,28777.45,0.47,1598.75,68.0,6.0,12.0,1.0,18.0,43.0,142.0,97.0,25.0,yes
+4.0,1.0,1.0,1.0,5.0,11.61,0.5,2.0,5.8,23.22,0.0,1.29,2.0,0.0,0.0,0.0,4.0,1.0,4.0,1.0,1.0,no
+30.0,5.0,1.0,4.0,58.0,278.83,0.13,7.88,35.41,2195.76,0.09,121.99,23.0,0.0,5.0,0.0,12.0,16.0,37.0,21.0,9.0,yes
+4.0,1.0,1.0,1.0,7.0,19.65,0.5,2.0,9.83,39.3,0.01,2.18,2.0,0.0,0.0,0.0,4.0,3.0,4.0,3.0,1.0,no
+14.0,2.0,1.0,2.0,33.0,147.16,0.13,8.0,18.4,1177.29,0.05,65.4,11.0,1.0,0.0,0.0,11.0,11.0,17.0,16.0,3.0,yes
+10.0,2.0,1.0,2.0,18.0,64.53,0.14,7.0,9.22,451.71,0.02,25.09,8.0,0.0,0.0,0.0,8.0,4.0,11.0,7.0,3.0,yes
+56.0,3.0,1.0,2.0,285.0,1722.65,0.06,18.08,95.28,31145.55,0.57,1730.31,78.0,3.0,13.0,0.0,11.0,34.0,105.0,57.0,17.0,yes
+4.0,1.0,1.0,1.0,4.0,8.0,0.67,1.5,5.33,12.0,0.0,0.67,2.0,0.0,0.0,0.0,3.0,1.0,3.0,1.0,1.0,no
+29.0,3.0,1.0,3.0,72.0,334.36,0.09,10.61,31.52,3546.58,0.11,197.03,22.0,1.0,3.0,0.0,11.0,14.0,45.0,27.0,5.0,yes
+6.0,1.0,1.0,1.0,9.0,23.26,0.5,2.0,11.63,46.53,0.01,2.58,4.0,0.0,0.0,0.0,3.0,3.0,5.0,4.0,1.0,no
+4.0,1.0,1.0,1.0,5.0,11.61,0.67,1.5,7.74,17.41,0.0,0.97,2.0,0.0,0.0,0.0,3.0,2.0,3.0,2.0,1.0,no
+102.0,10.0,8.0,9.0,244.0,1452.82,0.04,24.75,58.7,35957.39,0.48,1997.63,72.0,12.0,16.0,0.0,22.0,40.0,154.0,90.0,19.0,yes
+45.0,9.0,1.0,4.0,197.0,1158.88,0.04,23.33,49.67,27040.55,0.39,1502.25,36.0,2.0,4.0,1.0,20.0,39.0,106.0,91.0,17.0,yes
+6.0,1.0,1.0,1.0,15.0,49.83,0.43,2.33,21.36,116.27,0.02,6.46,4.0,0.0,0.0,0.0,4.0,6.0,8.0,7.0,1.0,yes
+43.0,3.0,1.0,3.0,83.0,380.55,0.12,8.25,46.13,3139.55,0.13,174.42,24.0,4.0,8.0,0.0,8.0,16.0,50.0,33.0,5.0,yes
+16.0,1.0,1.0,1.0,58.0,265.93,0.12,8.57,31.02,2279.38,0.09,126.63,13.0,2.0,5.0,0.0,9.0,9.0,22.0,12.0,3.0,yes
+11.0,3.0,1.0,2.0,34.0,151.62,0.14,7.2,21.06,1091.67,0.05,60.65,9.0,0.0,0.0,0.0,12.0,10.0,22.0,12.0,5.0,yes
+41.0,8.0,7.0,7.0,105.0,534.18,0.05,21.38,24.99,11418.17,0.18,634.34,31.0,1.0,5.0,2.0,18.0,16.0,67.0,38.0,15.0,yes
+48.0,15.0,1.0,7.0,160.0,827.19,0.04,23.57,35.09,19498.0,0.28,1083.22,43.0,0.0,2.0,1.0,15.0,21.0,94.0,66.0,29.0,yes
+3.0,1.0,1.0,1.0,10.0,25.85,0.5,2.0,12.92,51.7,0.01,2.87,2.0,0.0,0.0,0.0,1.0,2.0,1.0,6.0,1.0,yes
+43.0,3.0,1.0,3.0,72.0,346.13,0.06,16.67,20.77,5768.83,0.12,320.49,29.0,4.0,6.0,0.0,16.0,12.0,47.0,25.0,5.0,yes
+22.0,2.0,1.0,2.0,34.0,141.78,0.17,6.0,23.63,850.66,0.05,47.26,8.0,1.0,4.0,0.0,10.0,14.0,34.0,24.0,1.0,yes
+26.0,5.0,1.0,2.0,52.0,228.4,0.09,11.55,19.77,2638.03,0.08,146.56,24.0,0.0,0.0,0.0,11.0,10.0,31.0,21.0,9.0,yes
+6.0,1.0,1.0,1.0,5.0,11.61,0.67,1.5,7.74,17.41,0.0,0.97,3.0,0.0,1.0,0.0,3.0,2.0,3.0,2.0,1.0,no
+20.0,2.0,1.0,2.0,32.0,130.8,0.16,6.19,21.14,809.32,0.04,44.96,16.0,0.0,1.0,0.0,9.0,8.0,21.0,11.0,3.0,yes
+19.0,4.0,1.0,1.0,44.0,176.0,0.09,11.57,15.21,2036.57,0.06,113.14,15.0,0.0,1.0,0.0,9.0,7.0,26.0,18.0,7.0,yes
+210.0,5.0,1.0,3.0,687.0,4305.28,0.02,41.37,104.08,178095.18,1.44,9894.18,164.0,3.0,41.0,0.0,17.0,60.0,395.0,292.0,9.0,yes
+35.0,5.0,1.0,4.0,77.0,388.42,0.1,10.08,38.55,3913.31,0.13,217.41,30.0,0.0,3.0,0.0,13.0,20.0,46.0,31.0,9.0,yes
+4.0,1.0,1.0,1.0,5.0,11.61,0.5,2.0,5.8,23.22,0.0,1.29,2.0,0.0,0.0,0.0,4.0,1.0,4.0,1.0,1.0,no
+28.0,2.0,1.0,2.0,69.0,324.33,0.1,10.27,31.59,3329.79,0.11,184.99,18.0,1.0,7.0,0.0,11.0,15.0,41.0,28.0,3.0,yes
+6.0,2.0,1.0,2.0,13.0,41.21,0.33,3.0,13.74,123.63,0.01,6.87,4.0,0.0,0.0,0.0,6.0,3.0,10.0,3.0,3.0,yes
+8.0,1.0,1.0,1.0,10.0,30.0,0.3,3.33,9.0,100.0,0.01,5.56,4.0,0.0,1.0,0.0,5.0,3.0,6.0,4.0,1.0,yes
+4.0,1.0,1.0,1.0,4.0,8.0,0.67,1.5,5.33,12.0,0.0,0.67,2.0,0.0,0.0,0.0,3.0,1.0,3.0,1.0,1.0,no
+63.0,8.0,7.0,7.0,194.0,1121.58,0.05,19.22,58.37,21552.6,0.37,1197.37,49.0,2.0,10.0,0.0,18.0,37.0,115.0,79.0,15.0,yes
+36.0,8.0,8.0,5.0,113.0,574.88,0.04,23.06,24.93,13258.25,0.19,736.57,26.0,1.0,6.0,1.0,18.0,16.0,72.0,41.0,15.0,yes
+47.0,3.0,1.0,3.0,80.0,388.64,0.06,17.23,22.55,6696.54,0.13,372.03,33.0,5.0,5.0,0.0,16.0,13.0,52.0,28.0,5.0,yes
+15.0,2.0,1.0,1.0,38.0,169.46,0.13,7.8,21.73,1321.78,0.06,73.43,10.0,0.0,1.0,0.0,12.0,10.0,25.0,13.0,3.0,yes
+4.0,1.0,1.0,1.0,4.0,8.0,0.67,1.5,5.33,12.0,0.0,0.67,2.0,0.0,0.0,0.0,3.0,1.0,3.0,1.0,1.0,no
+38.0,4.0,1.0,4.0,84.0,403.82,0.11,8.89,45.43,3589.49,0.13,199.42,27.0,0.0,5.0,0.0,10.0,18.0,52.0,32.0,7.0,yes
+7.0,1.0,1.0,1.0,6.0,15.51,0.4,2.5,6.2,38.77,0.01,2.15,3.0,0.0,1.0,0.0,5.0,1.0,5.0,1.0,1.0,yes
+56.0,4.0,1.0,4.0,105.0,546.99,0.07,13.98,39.13,7645.46,0.18,424.75,44.0,3.0,3.0,0.0,15.0,22.0,64.0,41.0,7.0,yes
+10.0,2.0,1.0,2.0,18.0,64.53,0.14,7.0,9.22,451.71,0.02,25.09,8.0,0.0,0.0,0.0,8.0,4.0,11.0,7.0,3.0,yes
+4.0,1.0,1.0,1.0,5.0,11.61,0.67,1.5,7.74,17.41,0.0,0.97,2.0,0.0,0.0,0.0,3.0,2.0,3.0,2.0,1.0,no
+4.0,1.0,1.0,1.0,6.0,15.51,0.4,2.5,6.2,38.77,0.01,2.15,2.0,0.0,0.0,0.0,5.0,1.0,5.0,1.0,1.0,yes
+4.0,1.0,1.0,1.0,4.0,8.0,0.67,1.5,5.33,12.0,0.0,0.67,2.0,0.0,0.0,0.0,3.0,1.0,3.0,1.0,1.0,no
+4.0,1.0,1.0,1.0,5.0,11.61,0.5,2.0,5.8,23.22,0.0,1.29,2.0,0.0,0.0,0.0,4.0,1.0,4.0,1.0,1.0,no
+4.0,1.0,1.0,1.0,6.0,15.51,0.5,2.0,7.75,31.02,0.01,1.72,2.0,0.0,0.0,0.0,4.0,2.0,4.0,2.0,1.0,no
+47.0,3.0,1.0,3.0,115.0,569.73,0.1,10.48,54.38,5968.63,0.19,331.59,36.0,0.0,7.0,0.0,10.0,21.0,71.0,44.0,5.0,yes
+7.0,1.0,1.0,1.0,8.0,22.46,0.5,2.0,11.23,44.92,0.01,2.5,4.0,0.0,1.0,0.0,4.0,3.0,5.0,3.0,1.0,no
+20.0,4.0,3.0,3.0,40.0,178.38,0.07,15.0,11.89,2675.66,0.06,148.65,16.0,0.0,2.0,0.0,15.0,7.0,26.0,14.0,7.0,yes
+37.0,2.0,1.0,2.0,75.0,343.87,0.1,10.5,32.75,3610.66,0.11,200.59,26.0,5.0,5.0,0.0,7.0,17.0,24.0,51.0,3.0,yes
+7.0,1.0,1.0,1.0,13.0,36.5,0.2,5.0,7.3,182.48,0.01,10.14,4.0,0.0,0.0,1.0,5.0,2.0,9.0,4.0,1.0,yes
+44.0,6.0,6.0,6.0,124.0,668.65,0.05,22.0,30.39,14710.24,0.22,817.24,35.0,1.0,5.0,0.0,21.0,21.0,80.0,44.0,11.0,yes
+12.0,2.0,1.0,2.0,20.0,76.15,0.12,8.1,9.4,616.79,0.03,34.27,7.0,0.0,3.0,0.0,9.0,5.0,11.0,9.0,3.0,yes
+517.0,86.0,35.0,46.0,1340.0,9699.46,0.02,53.77,180.39,521538.55,3.23,28974.36,401.0,44.0,56.0,6.0,25.0,126.0,798.0,542.0,171.0,yes
+4.0,1.0,1.0,1.0,7.0,19.65,0.4,2.5,7.86,49.13,0.01,2.73,2.0,0.0,0.0,0.0,5.0,2.0,5.0,2.0,1.0,yes
+143.0,26.0,13.0,21.0,420.0,2639.87,0.03,37.11,71.13,97968.47,0.88,5442.69,116.0,7.0,13.0,5.0,24.0,54.0,253.0,167.0,51.0,yes
+14.0,2.0,1.0,2.0,61.0,307.71,0.11,9.42,32.65,2900.15,0.1,161.12,12.0,0.0,0.0,0.0,13.0,20.0,32.0,29.0,3.0,yes
+4.0,1.0,1.0,1.0,4.0,8.0,0.67,1.5,5.33,12.0,0.0,0.67,2.0,0.0,0.0,0.0,3.0,1.0,3.0,1.0,1.0,no
+29.0,2.0,1.0,2.0,105.0,554.97,0.13,7.76,71.53,4305.78,0.18,239.21,24.0,0.0,2.0,0.0,10.0,29.0,60.0,45.0,3.0,yes
+42.0,3.0,1.0,3.0,102.0,505.33,0.07,13.72,36.83,6934.22,0.17,385.23,31.0,2.0,5.0,0.0,13.0,18.0,64.0,38.0,5.0,yes
+28.0,4.0,1.0,4.0,59.0,241.16,0.07,13.57,17.77,3272.89,0.08,181.83,22.0,1.0,3.0,0.0,10.0,7.0,40.0,19.0,7.0,yes
+18.0,2.0,1.0,2.0,42.0,187.3,0.13,7.5,24.97,1404.72,0.06,78.04,13.0,1.0,2.0,0.0,10.0,12.0,24.0,18.0,3.0,yes
+72.0,4.0,1.0,4.0,162.0,879.05,0.05,19.85,44.28,17450.87,0.29,969.49,53.0,1.0,16.0,0.0,16.0,27.0,95.0,67.0,7.0,yes
+2.0,1.0,1.0,1.0,4.0,8.0,0.67,1.5,5.33,12.0,0.0,0.67,0.0,0.0,0.0,0.0,3.0,1.0,3.0,1.0,1.0,no
+108.0,11.0,1.0,8.0,289.0,1655.37,0.04,23.09,71.69,38225.96,0.55,2123.66,85.0,0.0,20.0,0.0,15.0,38.0,172.0,117.0,21.0,yes
+33.0,6.0,4.0,4.0,84.0,412.18,0.05,18.29,22.54,7536.98,0.14,418.72,26.0,2.0,3.0,0.0,16.0,14.0,52.0,32.0,11.0,yes
+28.0,5.0,1.0,2.0,78.0,386.43,0.09,11.56,33.44,4465.38,0.13,248.08,18.0,2.0,6.0,0.0,13.0,18.0,46.0,32.0,9.0,yes
+43.0,4.0,3.0,4.0,93.0,437.14,0.09,11.56,37.81,5054.44,0.15,280.8,30.0,1.0,9.0,1.0,10.0,16.0,56.0,37.0,7.0,yes
+4.0,1.0,1.0,1.0,4.0,8.0,0.67,1.5,5.33,12.0,0.0,0.67,2.0,0.0,0.0,0.0,3.0,1.0,3.0,1.0,1.0,no
+110.0,12.0,10.0,12.0,313.0,1825.69,0.04,24.0,76.07,43816.67,0.61,2434.26,88.0,3.0,15.0,0.0,16.0,41.0,190.0,123.0,23.0,yes
+15.0,3.0,1.0,2.0,49.0,211.77,0.12,8.5,24.91,1800.08,0.07,100.0,10.0,0.0,3.0,0.0,10.0,10.0,32.0,17.0,5.0,yes
+11.0,1.0,1.0,1.0,13.0,36.5,0.4,2.5,14.6,91.24,0.01,5.07,4.0,3.0,2.0,0.0,5.0,2.0,11.0,2.0,1.0,yes
+102.0,25.0,4.0,4.0,248.0,1488.0,0.05,19.17,77.62,28525.28,0.5,1584.74,92.0,3.0,5.0,0.0,17.0,47.0,142.0,106.0,49.0,yes
+149.0,30.0,16.0,27.0,391.0,2270.68,0.03,29.64,76.61,67305.16,0.76,3739.18,115.0,20.0,10.0,2.0,17.0,39.0,255.0,136.0,59.0,yes
+4.0,1.0,1.0,1.0,4.0,8.0,0.67,1.5,5.33,12.0,0.0,0.67,2.0,0.0,0.0,0.0,3.0,1.0,3.0,1.0,1.0,no
+10.0,2.0,1.0,2.0,18.0,64.53,0.14,7.0,9.22,451.71,0.02,25.09,8.0,0.0,0.0,0.0,8.0,4.0,11.0,7.0,3.0,yes
+4.0,1.0,1.0,1.0,4.0,8.0,0.67,1.5,5.33,12.0,0.0,0.67,2.0,0.0,0.0,0.0,3.0,1.0,3.0,1.0,1.0,no
+5.0,1.0,1.0,1.0,5.0,11.61,0.67,1.5,7.74,17.41,0.0,0.97,2.0,0.0,0.0,0.0,3.0,2.0,3.0,2.0,1.0,no
+68.0,5.0,1.0,3.0,76.0,348.46,0.08,12.27,28.4,4275.3,0.12,237.52,25.0,0.0,4.0,0.0,12.0,24.0,94.0,73.0,9.0,yes
+4.0,1.0,1.0,1.0,4.0,8.0,0.67,1.5,5.33,12.0,0.0,0.67,2.0,0.0,0.0,0.0,3.0,1.0,3.0,1.0,1.0,no
+28.0,2.0,1.0,2.0,130.0,677.23,0.1,10.15,66.7,6876.48,0.23,382.03,21.0,1.0,3.0,0.0,11.0,26.0,82.0,48.0,3.0,yes
+4.0,1.0,1.0,1.0,4.0,8.0,0.67,1.5,5.33,12.0,0.0,0.67,2.0,0.0,0.0,0.0,3.0,1.0,3.0,1.0,1.0,no
+29.0,1.0,1.0,1.0,73.0,354.63,0.11,9.17,38.69,3250.8,0.12,180.6,20.0,0.0,7.0,0.0,11.0,18.0,43.0,30.0,1.0,yes
+13.0,1.0,1.0,1.0,14.0,46.51,0.67,1.5,31.0,69.76,0.02,3.88,4.0,0.0,2.0,2.0,3.0,7.0,7.0,7.0,1.0,no
+55.0,13.0,1.0,13.0,100.0,504.44,0.09,10.73,47.03,5410.11,0.17,300.56,40.0,0.0,13.0,0.0,13.0,20.0,67.0,33.0,25.0,yes
+11.0,2.0,1.0,2.0,19.0,70.31,0.18,5.6,12.56,393.73,0.02,21.87,8.0,0.0,1.0,0.0,8.0,5.0,12.0,7.0,3.0,yes
+3.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,1.0,0.0,0.0,0.0,1.0,0.0,1.0,0.0,1.0,no
+10.0,2.0,1.0,1.0,24.0,96.0,0.2,5.0,19.2,480.0,0.03,26.67,6.0,0.0,2.0,0.0,8.0,8.0,14.0,10.0,3.0,yes
+5.0,1.0,1.0,1.0,4.0,6.34,1.33,0.75,8.45,4.75,0.0,0.26,3.0,0.0,0.0,0.0,1.0,2.0,1.0,3.0,1.0,no
+47.0,2.0,1.0,2.0,385.0,2375.42,0.03,34.5,68.85,81952.03,0.79,4552.89,119.0,6.0,18.0,0.0,11.0,25.0,87.0,44.0,31.0,yes
+4.0,1.0,1.0,1.0,4.0,8.0,0.67,1.5,5.33,12.0,0.0,0.67,2.0,0.0,0.0,0.0,3.0,1.0,3.0,1.0,1.0,no
+4.0,1.0,1.0,1.0,5.0,11.61,0.67,1.5,7.74,17.41,0.0,0.97,2.0,0.0,0.0,0.0,3.0,2.0,3.0,2.0,1.0,no
+4.0,1.0,1.0,1.0,4.0,8.0,0.67,1.5,5.33,12.0,0.0,0.67,2.0,0.0,0.0,0.0,3.0,1.0,3.0,1.0,1.0,no
+4.0,1.0,1.0,1.0,4.0,8.0,0.67,1.5,5.33,12.0,0.0,0.67,2.0,0.0,0.0,0.0,3.0,1.0,3.0,1.0,1.0,no
+42.0,4.0,1.0,3.0,78.0,393.46,0.08,12.53,31.41,4928.64,0.13,273.81,23.0,5.0,9.0,1.0,14.0,19.0,44.0,34.0,7.0,yes
+59.0,5.0,1.0,4.0,146.0,810.97,0.05,19.27,42.09,15624.69,0.27,868.04,51.0,1.0,5.0,0.0,17.0,30.0,78.0,68.0,9.0,yes
+3.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,1.0,0.0,0.0,0.0,1.0,0.0,1.0,0.0,1.0,no
+67.0,5.0,1.0,5.0,213.0,1202.14,0.06,16.34,73.58,19640.39,0.4,1091.13,50.0,4.0,9.0,2.0,13.0,37.0,120.0,93.0,9.0,yes
+18.0,5.0,1.0,2.0,54.0,233.38,0.07,13.44,17.36,3137.72,0.08,174.32,12.0,1.0,3.0,0.0,11.0,9.0,32.0,22.0,9.0,yes
+16.0,2.0,1.0,2.0,23.0,87.57,0.14,7.2,12.16,630.5,0.03,35.03,12.0,0.0,2.0,0.0,9.0,5.0,15.0,8.0,3.0,yes
+4.0,1.0,1.0,1.0,6.0,15.51,0.0,0.0,0.0,0.0,0.01,0.0,2.0,0.0,0.0,0.0,6.0,0.0,6.0,0.0,1.0,no
+20.0,3.0,3.0,3.0,18.0,66.61,0.18,5.6,11.89,373.0,0.02,20.72,5.0,0.0,0.0,0.0,11.0,8.0,23.0,15.0,5.0,yes
+4.0,1.0,1.0,1.0,4.0,8.0,0.67,1.5,5.33,12.0,0.0,0.67,2.0,0.0,0.0,0.0,3.0,1.0,3.0,1.0,1.0,no
+38.0,2.0,1.0,2.0,69.0,353.92,0.2,5.02,70.51,1776.41,0.12,98.69,25.0,0.0,2.0,0.0,9.0,26.0,40.0,29.0,3.0,yes
+% 
+% 
+% 

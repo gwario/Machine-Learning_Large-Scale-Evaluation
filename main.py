@@ -14,6 +14,12 @@ import datetime
 import pandas as pd
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import ExtraTreesClassifier, RandomForestClassifier, AdaBoostClassifier
+from sklearn.naive_bayes import GaussianNB
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.svm import SVC
+from sklearn.neural_network import MLPClassifier
+from sklearn.linear_model import Perceptron
+from sklearn.gaussian_process import GaussianProcessClassifier
 from sklearn.model_selection import RandomizedSearchCV, cross_validate, KFold, train_test_split, StratifiedShuffleSplit, StratifiedKFold
 from sklearn.pipeline import Pipeline
 from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score, classification_report
@@ -99,6 +105,18 @@ def get_estimator(config):
         estimator = AdaBoostClassifier()
     elif estimator_name == 'DecisionTreeClassifier':
         estimator = DecisionTreeClassifier()
+    elif estimator_name == 'GaussianNB':
+        estimator = GaussianNB()
+    elif estimator_name == 'KNeighborsClassifier':
+        estimator = KNeighborsClassifier()
+    elif estimator_name == 'SVC':
+        estimator = SVC()
+    elif estimator_name == 'GaussianProcessClassifier':
+        estimator = GaussianProcessClassifier()
+    elif estimator_name == 'MLPClassifier':
+        estimator = MLPClassifier()
+    elif estimator_name == 'Perceptron':
+        estimator = Perceptron()
     else:
         raise ValueError("Unknown estimator '{}'".format(estimator_name))
 
@@ -125,6 +143,12 @@ if __name__ == '__main__':
      * ExtraTreesClassifier
      * DecisionTreeClassifier
      * AdaBoostClassifier
+     * GaussianNB
+     * KNeighborsClassifier
+     * SVC
+     * GaussianProcessClassifier
+     * MLPClassifier
+     * Perceptron
      * ...
      TODO add more estimators
     """

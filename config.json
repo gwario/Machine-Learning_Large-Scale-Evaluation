@@ -40,6 +40,38 @@
       "params": {
         "random_state": 12345
         }
+      },
+    {
+      "estimator": "GaussianNB",
+      "params": {}
+      },
+    {
+      "estimator": "KNeighborsClassifier",
+      "params": {}
+      },
+    {
+      "estimator": "SVC",
+      "params": {
+        "random_state": 12345
+        }
+      },
+    {
+      "estimator": "GaussianProcessClassifier",
+      "params": {
+        "random_state": 12345
+        }
+      },
+    {
+      "estimator": "MLPClassifier",
+      "params": {
+        "random_state": 12345
+        }
+      },
+    {
+      "estimator": "Perceptron",
+      "params": {
+        "random_state": 12345
+        }
       }
     ]
   }
