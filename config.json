@@ -3,6 +3,7 @@
   "stratify": true,
   "repetitions": 3,
   "datasets": [
+    "speeddating.arff",
     "mammography.arff",
     "iris.arff"
   ],
