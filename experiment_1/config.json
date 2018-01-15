@@ -1,1 +1,16 @@
-{"random_state": 12345, "stratify": true, "test_splits": 2, "estimators": [{"params": {"n_jobs": 1, "bootstrap": false, "warm_start": false, "min_samples_leaf": 1, "min_impurity_split": null, "min_samples_split": 2, "max_depth": null, "max_features": "auto", "random_state": 12345, "oob_score": false, "min_weight_fraction_leaf": 0.0, "n_estimators": 500, "criterion": "gini", "min_impurity_decrease": 0.0, "class_weight": null, "verbose": 0, "max_leaf_nodes": null}, "estimator": "ExtraTreesClassifier"}, {"params": {"n_jobs": 1, "bootstrap": true, "warm_start": false, "min_samples_leaf": 1, "min_impurity_split": null, "min_samples_split": 2, "max_depth": null, "max_features": "auto", "random_state": 12345, "oob_score": false, "min_weight_fraction_leaf": 0.0, "n_estimators": 500, "criterion": "gini", "min_impurity_decrease": 0.0, "class_weight": null, "verbose": 0, "max_leaf_nodes": null}, "estimator": "RandomForestClassifier"}], "repetitions": 3, "datasets": ["speeddating.arff", "mammography.arff", "iris.arff"], "experiment": "experiment_1", "train_size": 0.6}
+{"test_splits": 2,
+  "random_state": 12345,
+  "estimators": [
+    {"estimator": "ExtraTreesClassifier",
+    "params": {"min_weight_fraction_leaf": 0.0, "random_state": 12345, "min_samples_leaf": 1, "warm_start": false, "criterion": "gini", "n_estimators": 500, "min_impurity_decrease": 0.0, "max_depth": null, "n_jobs": 1, "oob_score": false, "max_features": "auto", "bootstrap": false, "min_samples_split": 2, "min_impurity_split": null, "verbose": 0, "max_leaf_nodes": null, "class_weight": null}},
+    {"estimator": "RandomForestClassifier",
+      "params": {"min_weight_fraction_leaf": 0.0, "random_state": 12345, "min_samples_leaf": 1, "warm_start": false, "criterion": "gini", "n_estimators": 500, "min_impurity_decrease": 0.0, "max_depth": null, "n_jobs": 1, "oob_score": false, "max_features": "auto", "bootstrap": true, "min_samples_split": 2, "min_impurity_split": null, "verbose": 0, "max_leaf_nodes": null, "class_weight": null}},
+    {"estimator": "DecisionTreeClassifier",
+      "params": {"min_weight_fraction_leaf": 0.0, "random_state": 12345, "min_samples_leaf": 1, "presort": false, "criterion": "gini", "splitter": "best", "min_impurity_decrease": 0.0, "max_depth": null, "max_features": null, "min_samples_split": 2, "min_impurity_split": null, "max_leaf_nodes": null, "class_weight": null}},
+    {"estimator": "AdaBoostClassifier",
+      "params": {"algorithm": "SAMME.R", "random_state": 12345, "learning_rate": 1.0, "n_estimators": 50, "base_estimator": null}}],
+  "experiment": "experiment_1",
+  "repetitions": 2,
+  "train_size": 0.6,
+  "datasets": ["speeddating.arff", "mammography.arff", "iris.arff", "climate-model-simulation-crashes.arff", "diabetes.arff", "ilpd.arff", "kc2.arff"],
+  "stratify": true}

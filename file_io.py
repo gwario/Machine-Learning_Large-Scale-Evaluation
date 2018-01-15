@@ -144,7 +144,6 @@ def load_data(data_file, config):
 
     elif data_file == 'speeddating.arff':
 
-        #data, meta = arff.loadarff(data_file)
         data = arff.load(open(data_file), encode_nominal=True)
         df = pd.DataFrame(data['data'], columns=[name for (name, type) in data['attributes']])
         df = df.sample(frac=1, random_state=config['random_state'])
@@ -169,6 +168,82 @@ def load_data(data_file, config):
 
         X = df.loc[:, [name for (name, type) in data['attributes'] if name != 'match']]
         y = df.loc[:, ['match']].values.ravel()
+
+        return X, y, data
+
+    elif data_file == 'climate-model-simulation-crashes.arff':
+
+        data = arff.load(open(data_file))
+        df = pd.DataFrame(data['data'], columns=[name for (name, type) in data['attributes']])
+        df = df.sample(frac=1, random_state=config['random_state'])
+
+        df.info()
+
+        if DATASET_LESS_DATA:
+            log.warning("Using at most {} instances.".format(DATASET_INSTANCE_CAP_CNT))
+            df.drop(df.index[:-DATASET_INSTANCE_CAP_CNT], inplace=True)
+
+        df.info()
+
+        X = df.loc[:, [name for (name, type) in data['attributes'] if name != 'Class']]
+        y = df.loc[:, ['Class']].values.ravel()
+
+        return X, y, data
+
+    elif data_file == 'diabetes.arff':
+
+        data = arff.load(open(data_file))
+        df = pd.DataFrame(data['data'], columns=[name for (name, type) in data['attributes']])
+        df = df.sample(frac=1, random_state=config['random_state'])
+
+        df.info()
+
+        if DATASET_LESS_DATA:
+            log.warning("Using at most {} instances.".format(DATASET_INSTANCE_CAP_CNT))
+            df.drop(df.index[:-DATASET_INSTANCE_CAP_CNT], inplace=True)
+
+        df.info()
+
+        X = df.loc[:, [name for (name, type) in data['attributes'] if name != 'class']]
+        y = df.loc[:, ['class']].values.ravel()
+
+        return X, y, data
+
+    elif data_file == 'ilpd.arff':
+
+        data = arff.load(open(data_file), encode_nominal=True)
+        df = pd.DataFrame(data['data'], columns=[name for (name, type) in data['attributes']])
+        df = df.sample(frac=1, random_state=config['random_state'])
+
+        df.info()
+
+        if DATASET_LESS_DATA:
+            log.warning("Using at most {} instances.".format(DATASET_INSTANCE_CAP_CNT))
+            df.drop(df.index[:-DATASET_INSTANCE_CAP_CNT], inplace=True)
+
+        df.info()
+
+        X = df.loc[:, [name for (name, type) in data['attributes'] if name != 'Class']]
+        y = df.loc[:, ['Class']].values.ravel()
+
+        return X, y, data
+
+    elif data_file == 'kc2.arff':
+
+        data = arff.load(open(data_file))
+        df = pd.DataFrame(data['data'], columns=[name for (name, type) in data['attributes']])
+        df = df.sample(frac=1, random_state=config['random_state'])
+
+        df.info()
+
+        if DATASET_LESS_DATA:
+            log.warning("Using at most {} instances.".format(DATASET_INSTANCE_CAP_CNT))
+            df.drop(df.index[:-DATASET_INSTANCE_CAP_CNT], inplace=True)
+
+        df.info()
+
+        X = df.loc[:, [name for (name, type) in data['attributes'] if name != 'problems']]
+        y = df.loc[:, ['problems']].values.ravel()
 
         return X, y, data
 

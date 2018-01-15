@@ -30,7 +30,7 @@ log.basicConfig(level=log.INFO, format='%(asctime)s %(levelname)s %(message)s')
 default_config = {
     'experiment': 'default_experiment',         # the title of the experiment
     'stratify': True,                           # whether to stratify or not
-    'repetitions': 3,                           # number of times every estimator is run with every dataset
+    'repetitions': 2,                           # number of times every estimator is run with every dataset
     'datasets': ['speeddating.arff',            # preprocessed dataset
                  'mammography.arff',
                  'iris.arff',],
@@ -108,16 +108,26 @@ def get_estimator(config):
     return estimator
 
 
-# Available datasets:
-#
-# Available estimators:
-# RandomForestClassifier, ExtraTreesClassifier, DecisionTreeClassifier, AdaBoostClassifier ...
-# TODO add more estimators
-#
-
-
 if __name__ == '__main__':
-
+    """
+    Available datasets:
+     * speeddating.arff
+     * mammography.arff
+     * iris.arff
+     * climate-model-simulation-crashes.arff
+     * diabetes.arff
+     * ilpd.arff
+     * kc2.arff
+     * ...
+    
+     Available estimators:
+     * RandomForestClassifier
+     * ExtraTreesClassifier
+     * DecisionTreeClassifier
+     * AdaBoostClassifier
+     * ...
+     TODO add more estimators
+    """
     config = io.load_config(sys.argv, default_config)
 
     experiment_dir = config['experiment']
@@ -252,14 +262,9 @@ if __name__ == '__main__':
     io.save_data(scores, experiment_dir+'/evaluation_scores.csv')
     io.save_data(times, experiment_dir+'/evaluation_times.csv')
 
-    # TODO calculate mean and stdev among repetitions
-
-    # TODO create output directory with config.experiment
-    # TODO store entire config (actual estimator params)
-    # TODO store results arff
+    # TODO calculate mean and stdev among repetitions (?)
     # TODO store results diagrams
-
-    # TODO arff output template
+    # TODO arff output template (?)
     # dataset, algorithm, repetition_index, split_index, metric1, metric2, metric3
 
     # TODO generate diagrams (maybe external script?)

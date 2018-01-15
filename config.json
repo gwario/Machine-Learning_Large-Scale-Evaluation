@@ -1,11 +1,15 @@
 {
   "experiment": "experiment_1",
   "stratify": true,
-  "repetitions": 3,
+  "repetitions": 2,
   "datasets": [
     "speeddating.arff",
     "mammography.arff",
-    "iris.arff"
+    "iris.arff",
+    "climate-model-simulation-crashes.arff",
+    "diabetes.arff",
+    "ilpd.arff",
+    "kc2.arff"
   ],
   "random_state": 12345,
   "train_size": 0.6,
@@ -22,7 +26,20 @@
       "estimator": "RandomForestClassifier",
       "params": {
         "random_state": 12345,
-        "n_estimators": 500}
+        "n_estimators": 500
         }
+      },
+    {
+      "estimator": "DecisionTreeClassifier",
+      "params": {
+        "random_state": 12345
+        }
+      },
+    {
+      "estimator": "AdaBoostClassifier",
+      "params": {
+        "random_state": 12345
+        }
+      }
     ]
   }
