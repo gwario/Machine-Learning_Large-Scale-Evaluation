@@ -136,6 +136,11 @@ if __name__ == '__main__':
      * diabetes.arff
      * ilpd.arff
      * kc2.arff
+     * steel-plates-fault.arff
+     * segment.arff
+     * hepatitis.arff
+     * ringnorm.arff
+     * credit-g.arff
      * ...
     
      Available estimators:

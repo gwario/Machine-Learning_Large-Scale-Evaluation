@@ -9,7 +9,12 @@
     "climate-model-simulation-crashes.arff",
     "diabetes.arff",
     "ilpd.arff",
-    "kc2.arff"
+    "kc2.arff",
+	"steel-plates-fault.arff",
+	"segment.arff",
+	"hepatitis.arff",
+	"ringnorm.arff",
+	"credit-g.arff"
   ],
   "random_state": 12345,
   "train_size": 0.6,

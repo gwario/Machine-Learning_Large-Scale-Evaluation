@@ -247,6 +247,114 @@ def load_data(data_file, config):
 
         return X, y, data
 
+    elif data_file == 'steel-plates-fault.arff':
+
+        data = arff.load(open(data_file))
+        df = pd.DataFrame(data['data'], columns=[name for (name, type) in data['attributes']])
+        df = df.sample(frac=1, random_state=config['random_state'])
+
+        df.info()
+
+        if DATASET_LESS_DATA:
+            log.warning("Using at most {} instances.".format(DATASET_INSTANCE_CAP_CNT))
+            df.drop(df.index[:-DATASET_INSTANCE_CAP_CNT], inplace=True)
+
+        df.info()
+
+        X = df.loc[:, [name for (name, type) in data['attributes'] if name != 'problems']]
+        y = df.loc[:, ['problems']].values.ravel()
+
+        return X, y, data
+
+
+
+
+    elif data_file == 'segment.arff':
+    
+        data = arff.load(open(data_file))
+        df = pd.DataFrame(data['data'], columns=[name for (name, type) in data['attributes']])
+        df = df.sample(frac=1, random_state=config['random_state'])
+
+        df.info()
+
+        if DATASET_LESS_DATA:
+            log.warning("Using at most {} instances.".format(DATASET_INSTANCE_CAP_CNT))
+            df.drop(df.index[:-DATASET_INSTANCE_CAP_CNT], inplace=True)
+
+        df.info()
+
+        X = df.loc[:, [name for (name, type) in data['attributes'] if name != 'problems']]
+        y = df.loc[:, ['problems']].values.ravel()
+
+        return X, y, data
+
+    elif data_file == 'hepatitis.arff':
+    
+        data = arff.load(open(data_file), encode_nominal=True)
+        df = pd.DataFrame(data['data'], columns=[name for (name, type) in data['attributes']])
+        df = df.sample(frac=1, random_state=config['random_state'])
+
+        df.info()
+
+        if DATASET_LESS_DATA:
+            log.warning("Using at most {} instances.".format(DATASET_INSTANCE_CAP_CNT))
+            df.drop(df.index[:-DATASET_INSTANCE_CAP_CNT], inplace=True)
+
+        df.info()
+
+        X = df.loc[:, [name for (name, type) in data['attributes'] if name != 'problems']]
+        y = df.loc[:, ['problems']].values.ravel()
+
+        return X, y, data
+
+
+    elif data_file == 'ringnorm.arff':
+    
+        data = arff.load(open(data_file))
+        df = pd.DataFrame(data['data'], columns=[name for (name, type) in data['attributes']])
+        df = df.sample(frac=1, random_state=config['random_state'])
+
+        df.info()
+
+        if DATASET_LESS_DATA:
+            log.warning("Using at most {} instances.".format(DATASET_INSTANCE_CAP_CNT))
+            df.drop(df.index[:-DATASET_INSTANCE_CAP_CNT], inplace=True)
+
+        df.info()
+
+        X = df.loc[:, [name for (name, type) in data['attributes'] if name != 'problems']]
+        y = df.loc[:, ['problems']].values.ravel()
+
+        return X, y, data
+
+
+    elif data_file == 'credit-g.arff':
+    
+        data = arff.load(open(data_file), encode_nominal=True)
+        df = pd.DataFrame(data['data'], columns=[name for (name, type) in data['attributes']])
+        df = df.sample(frac=1, random_state=config['random_state'])
+
+        df.info()
+
+        if DATASET_LESS_DATA:
+            log.warning("Using at most {} instances.".format(DATASET_INSTANCE_CAP_CNT))
+            df.drop(df.index[:-DATASET_INSTANCE_CAP_CNT], inplace=True)
+
+        df.info()
+
+        X = df.loc[:, [name for (name, type) in data['attributes'] if name != 'problems']]
+        y = df.loc[:, ['problems']].values.ravel()
+
+        return X, y, data
+
+
+
+
+
+
+
+
+
 
 def load_config(argv, default_config):
 

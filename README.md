@@ -3,6 +3,7 @@
 ## Requirements
 python3
 
+Install/type this (with admin rights):
 pip3 install scipy
 pip3 install sklearn
 pip3 install pandas
