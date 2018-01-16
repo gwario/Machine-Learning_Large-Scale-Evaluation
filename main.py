@@ -37,9 +37,8 @@ default_config = {
     'experiment': 'default_experiment',         # the title of the experiment
     'stratify': True,                           # whether to stratify or not
     'repetitions': 2,                           # number of times every estimator is run with every dataset
-    'datasets': ['speeddating.arff',            # preprocessed dataset
-                 'mammography.arff',
-                 'iris.arff',],
+    'datasets': ['iris.arff',                   # preprocessed dataset
+                 'mammography.arff',],
     'random_state': 12345,                      # the random state used where possible
     'train_size': 0.6,                          # size of training set
     'test_splits': 2,                           # the number of test splits (test_size = (1-train_size)/test_spits)
@@ -48,14 +47,14 @@ default_config = {
             'estimator': 'ExtraTreesClassifier',# estimator name from the list of available estimators
             'params': {                         # estimator parameters, see scikit docs
                 'random_state': 12345,          # estimators don't use the global random_state, set it for reproducibility
-                'n_estimators': 500
+                'n_estimators': 100
             }
         },
         {
             'estimator': 'RandomForestClassifier',
             'params': {
                 'random_state': 12345,
-                'n_estimators': 500}
+                'n_estimators': 100}
         },
     ]
 }
@@ -288,7 +287,9 @@ if __name__ == '__main__':
 
     # store metrics
     io.save_config(config, experiment_dir+'/config.json')
+    io.save_data_arff(scores, experiment_dir+'/evaluation_scores.arff')
     io.save_data(scores, experiment_dir+'/evaluation_scores.csv')
+    io.save_data_arff(times, experiment_dir+'/evaluation_times.arff')
     io.save_data(times, experiment_dir+'/evaluation_times.csv')
 
     # TODO calculate mean and stdev among repetitions (?)

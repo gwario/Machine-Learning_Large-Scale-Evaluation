@@ -266,9 +266,6 @@ def load_data(data_file, config):
 
         return X, y, data
 
-
-
-
     elif data_file == 'segment.arff':
     
         data = arff.load(open(data_file))
@@ -307,7 +304,6 @@ def load_data(data_file, config):
 
         return X, y, data
 
-
     elif data_file == 'ringnorm.arff':
     
         data = arff.load(open(data_file))
@@ -327,7 +323,6 @@ def load_data(data_file, config):
 
         return X, y, data
 
-
     elif data_file == 'credit-g.arff':
     
         data = arff.load(open(data_file), encode_nominal=True)
@@ -346,14 +341,6 @@ def load_data(data_file, config):
         y = df.loc[:, ['problems']].values.ravel()
 
         return X, y, data
-
-
-
-
-
-
-
-
 
 
 def load_config(argv, default_config):
@@ -389,13 +376,26 @@ def save_data(dataset, dataset_filename):
     print("Dataset saved as {}".format(dataset_filename))
 
 
-def save_data_arff(dataset, dataset_filename, arff_data):
-    """Saves the dataset, arff-formatted, to dataset_filename."""
-    #pprint(arff_data)
-    #print(dataset)
-    #print(type(arff_data['data']))
-    arff_data['data'] = dataset.values.tolist()
-    #print(type(arff_data['data']))
+def save_data_arff(dataset, dataset_filename, arff_data=None):
+    """Saves the dataset, arff-formatted, to dataset_filename.
+    if arff_data is provided, dataset is used for arff_data['data']."""
+
+    if arff_data is not None:
+        arff_data['data'] = dataset.values.tolist()
+
+    else:
+        real_attrs = [(name, 'REAL') for name in dataset.select_dtypes(include='floating').columns.values]
+        integer_attrs = [(name, 'INTEGER') for name in dataset.select_dtypes(include='integer').columns.values]
+        nominal_attrs = [(name, list(dataset[name].unique())) for name in dataset.select_dtypes(include='object').columns.values]
+        # re-arrange columns like above
+        dataset.columns = [name for (name, type) in real_attrs + integer_attrs + nominal_attrs]
+        dataset_name = os.path.splitext(os.path.basename(dataset_filename))[0]
+        arff_data = {
+            'relation': dataset_name,
+            'attributes': real_attrs + integer_attrs + nominal_attrs,
+            'data': dataset.values.tolist()
+            }
+
     arff.dump(arff_data, open(dataset_filename, 'w'))
     print("Dataset saved as {}".format(dataset_filename))
 
