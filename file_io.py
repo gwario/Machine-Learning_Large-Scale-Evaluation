@@ -1,9 +1,8 @@
+import json
 import logging as log
 import os.path
-import json
-import numpy as np
+
 import arff
-from pprint import pprint, pformat
 import pandas as pd
 from sklearn.externals import joblib
 
@@ -249,7 +248,7 @@ def load_data(data_file, config):
 
     elif data_file == 'steel-plates-fault.arff':
 
-        data = arff.load(open(data_file))
+        data = arff.load(open(data_file), encode_nominal=True)
         df = pd.DataFrame(data['data'], columns=[name for (name, type) in data['attributes']])
         df = df.sample(frac=1, random_state=config['random_state'])
 
@@ -261,8 +260,8 @@ def load_data(data_file, config):
 
         df.info()
 
-        X = df.loc[:, [name for (name, type) in data['attributes'] if name != 'problems']]
-        y = df.loc[:, ['problems']].values.ravel()
+        X = df.loc[:, [name for (name, type) in data['attributes'] if name != 'target']]
+        y = df.loc[:, ['target']].values.ravel()
 
         return X, y, data
 
@@ -280,8 +279,8 @@ def load_data(data_file, config):
 
         df.info()
 
-        X = df.loc[:, [name for (name, type) in data['attributes'] if name != 'problems']]
-        y = df.loc[:, ['problems']].values.ravel()
+        X = df.loc[:, [name for (name, type) in data['attributes'] if name != 'class']]
+        y = df.loc[:, ['class']].values.ravel()
 
         return X, y, data
 
@@ -299,8 +298,8 @@ def load_data(data_file, config):
 
         df.info()
 
-        X = df.loc[:, [name for (name, type) in data['attributes'] if name != 'problems']]
-        y = df.loc[:, ['problems']].values.ravel()
+        X = df.loc[:, [name for (name, type) in data['attributes'] if name != 'Class']]
+        y = df.loc[:, ['Class']].values.ravel()
 
         return X, y, data
 
@@ -318,8 +317,8 @@ def load_data(data_file, config):
 
         df.info()
 
-        X = df.loc[:, [name for (name, type) in data['attributes'] if name != 'problems']]
-        y = df.loc[:, ['problems']].values.ravel()
+        X = df.loc[:, [name for (name, type) in data['attributes'] if name != 'Class']]
+        y = df.loc[:, ['Class']].values.ravel()
 
         return X, y, data
 
@@ -337,8 +336,8 @@ def load_data(data_file, config):
 
         df.info()
 
-        X = df.loc[:, [name for (name, type) in data['attributes'] if name != 'problems']]
-        y = df.loc[:, ['problems']].values.ravel()
+        X = df.loc[:, [name for (name, type) in data['attributes'] if name != 'class']]
+        y = df.loc[:, ['class']].values.ravel()
 
         return X, y, data
 
