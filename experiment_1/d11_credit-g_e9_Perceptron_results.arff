@@ -1,0 +1,25 @@
+@RELATION d11_credit-g_e9_Perceptron_results
+
+@ATTRIBUTE train_accuracy REAL
+@ATTRIBUTE train_f1_macro REAL
+@ATTRIBUTE train_precision_macro REAL
+@ATTRIBUTE train_recall_macro REAL
+@ATTRIBUTE test0_accuracy REAL
+@ATTRIBUTE test0_f1_macro REAL
+@ATTRIBUTE test0_precision_macro REAL
+@ATTRIBUTE test0_recall_macro REAL
+@ATTRIBUTE test1_accuracy REAL
+@ATTRIBUTE test1_f1_macro REAL
+@ATTRIBUTE test1_precision_macro REAL
+@ATTRIBUTE test1_recall_macro REAL
+@ATTRIBUTE fit_time INTEGER
+@ATTRIBUTE score_time_train INTEGER
+@ATTRIBUTE score_time_test0 INTEGER
+@ATTRIBUTE score_time_test1 INTEGER
+
+@DATA
+'0 days 00:00:00.001034','0 days 00:00:00.000445','0 days 00:00:00.000360','0 days 00:00:00.000331',0.7,0.4117647058823529,0.35,0.5,0.7,0.4117647058823529,0.35,0.5,0.7,0.4117647058823529,0.35,0.5
+'0 days 00:00:00.000910','0 days 00:00:00.000237','0 days 00:00:00.000311','0 days 00:00:00.000237',0.3,0.23076923076923075,0.15,0.5,0.3,0.23076923076923075,0.15,0.5,0.3,0.23076923076923075,0.15,0.5
+% 
+% 
+% 

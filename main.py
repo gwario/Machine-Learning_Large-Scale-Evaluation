@@ -103,9 +103,18 @@ if __name__ == '__main__':
             estimator_name = estimator.__class__.__name__
             log.info("ESTIMATOR_{}_NAME: {}".format(estimator_i, estimator_name))
 
+            metrics = ['accuracy', 'f1_macro', 'precision_macro', 'recall_macro']
+            result_columns = ['fit_time', 'score_time_train']+['score_time_test{}'.format(i) for i in range(config['test_splits'])]
+            result_columns += ['train_{}'.format(metric) for metric in metrics]
+            result_columns += ['test{}_{}'.format(set_i, metric) for set_i in range(config['test_splits']) for metric in metrics]
+            dataset_estimator_results = pd.DataFrame(columns=result_columns)
+
             # for every repetition
             for repetition_i in range(config['repetitions']):
                 log.info("REPETITION_{}".format(repetition_i))
+
+                result_row_list_scores = []
+                result_row_list_times = []
 
                 X_train, X_test, y_train_true, y_test_true = train_test_split(X, y,
                                                                     stratify=y if config['stratify'] else None,
@@ -124,7 +133,7 @@ if __name__ == '__main__':
 
                 t0 = datetime.datetime.now()
                 y_train_pred = estimator.predict(X_train)
-                dT_train_pred = datetime.datetime.now() - t0
+                dT_train_score = datetime.datetime.now() - t0
 
                 # store predicted values in arff:
                 # d<dataset_id>_<dataset_name>_e<estimator_id>_<estimator_name>_r<repetition>_<set>[set_id].arff
@@ -137,9 +146,12 @@ if __name__ == '__main__':
                                   arff_data)
 
                 train_accuracy = accuracy_score(y_train_true, y_train_pred)
-                train_f1 =  f1_score(y_train_true, y_train_pred, average='macro')
+                train_f1 = f1_score(y_train_true, y_train_pred, average='macro')
                 train_precision = precision_score(y_train_true, y_train_pred, average='macro')
                 train_recall = recall_score(y_train_true, y_train_pred, average='macro')
+
+                result_row_list_times += [dT_fit, dT_train_score]
+                result_row_list_scores += [train_accuracy, train_f1, train_precision, train_recall]
 
                 log.info("Classification report for train:\n{}".format(classification_report(y_train_true, y_train_pred)))
 
@@ -147,7 +159,7 @@ if __name__ == '__main__':
                                  "e{}_{}".format(estimator_i, estimator_name),
                                  "r{}".format(repetition_i),
                                  "train",
-                                 dT_fit, dT_train_pred],
+                                 dT_fit, dT_train_score],
                                 index=['dataset_name', 'estimator_name', 'repetition', 'split', 'fit_time', 'pred_time'])
                 times = times.append(row, ignore_index=True)
 
@@ -168,7 +180,7 @@ if __name__ == '__main__':
 
                     t0 = datetime.datetime.now()
                     y_test_pred = estimator.predict(X_test)
-                    dT_train_pred = datetime.datetime.now() - t0
+                    dT_test_score = datetime.datetime.now() - t0
 
                     X_test.loc[:, 'class'] = pd.Series(y_test_pred, index=X_test.index)
                     io.save_data_arff(X_test,
@@ -179,17 +191,20 @@ if __name__ == '__main__':
                                       arff_data)
 
                     test_accuracy = accuracy_score(y_test_true, y_test_pred)
-                    test_f1 =  f1_score(y_test_true, y_test_pred, average='macro')
+                    test_f1 = f1_score(y_test_true, y_test_pred, average='macro')
                     test_precision = precision_score(y_test_true, y_test_pred, average='macro')
                     test_recall = recall_score(y_test_true, y_test_pred, average='macro')
 
                     log.info("Classification report for test_{}:\n{}".format(test_set_i, classification_report(y_test_true, y_test_pred)))
 
+                    result_row_list_times += [dT_test_score]
+                    result_row_list_scores += [test_accuracy, test_f1, test_precision, test_recall]
+
                     row = pd.Series(["d{}_{}".format(dataset_i, dataset_name),
                                      "e{}_{}".format(estimator_i, estimator_name),
                                      "r{}".format(repetition_i),
                                      "test{}".format(test_set_i),
-                                     dT_fit, dT_train_pred],
+                                     dT_fit, dT_test_score],
                                     index=['dataset_name', 'estimator_name', 'repetition', 'split',
                                            'fit_time', 'pred_time'])
                     times = times.append(row, ignore_index=True)
@@ -203,6 +218,17 @@ if __name__ == '__main__':
                                            'accuracy', 'f1_macro', 'precision_macro', 'recall_macro'])
                     scores = scores.append(row, ignore_index=True)
 
+                result_row_list = result_row_list_times + result_row_list_scores
+                result_row = pd.Series(result_row_list, index=result_columns)
+                dataset_estimator_results = dataset_estimator_results.append(result_row, ignore_index=True)
+
+            #save dataset estimator file
+            pp.pprint(dataset_estimator_results)
+            io.save_data_arff(dataset_estimator_results,
+                              '{}/d{}_{}_e{}_{}_results.arff'.format(experiment_dir,
+                                                                     dataset_i, dataset_name,
+                                                                     estimator_i, estimator_name))
+            # TODO save second arff with estimator parameter, dataset name, total time
 
     #pp.pprint(scores)
     #pp.pprint(times)
@@ -213,10 +239,11 @@ if __name__ == '__main__':
     io.save_data(scores, experiment_dir+'/evaluation_scores.csv')
     io.save_data_arff(times, experiment_dir+'/evaluation_times.arff')
     io.save_data(times, experiment_dir+'/evaluation_times.csv')
+    # TODO save arff for whole experiment with experiment name, date, total time
 
-    # TODO save two arffs per dataset and classifier:
-    # 1) results (e.g. tested accuracy, precision, TP rate, ...)
-    # 2) meta-data (name and parameters of classifiers, runtime (total, and each of training and testing),
+    # save two arffs per dataset and classifier:
+    # DONE 1) results (e.g. tested accuracy, precision, TP rate, ...)
+    # TODO 2) meta-data (name and parameters of classifiers, runtime (total, and each of training and testing),
     # date of experiment, input data used (e.g. filename))
 
     # TODO calculate mean and stdev among repetitions (?)
