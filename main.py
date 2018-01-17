@@ -229,6 +229,7 @@ if __name__ == '__main__':
                                                                      dataset_i, dataset_name,
                                                                      estimator_i, estimator_name))
             # TODO save second arff with estimator parameter, dataset name, total time
+            # TODO save timedeltas as millis or micros
 
     #pp.pprint(scores)
     #pp.pprint(times)
