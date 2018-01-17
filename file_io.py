@@ -288,6 +288,13 @@ def load_data(data_file, config):
     
         data = arff.load(open(data_file), encode_nominal=True)
         df = pd.DataFrame(data['data'], columns=[name for (name, type) in data['attributes']])
+
+        log.warning('Dropping instances with NaN/missing values...')
+        before = df.shape[0]
+        df.dropna(axis=0, how='any', inplace=True)
+        after = df.shape[0]
+        log.warning('Dropped {} instances of {}!'.format(before-after, before))
+
         df = df.sample(frac=1, random_state=config['random_state'])
 
         df.info()
