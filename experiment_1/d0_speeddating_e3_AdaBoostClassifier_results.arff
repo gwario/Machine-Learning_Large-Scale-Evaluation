@@ -1,5 +1,9 @@
 @RELATION d0_speeddating_e3_AdaBoostClassifier_results
 
+@ATTRIBUTE fit_time REAL
+@ATTRIBUTE score_time_train REAL
+@ATTRIBUTE score_time_test0 REAL
+@ATTRIBUTE score_time_test1 REAL
 @ATTRIBUTE train_accuracy REAL
 @ATTRIBUTE train_f1_macro REAL
 @ATTRIBUTE train_precision_macro REAL
@@ -12,14 +16,10 @@
 @ATTRIBUTE test1_f1_macro REAL
 @ATTRIBUTE test1_precision_macro REAL
 @ATTRIBUTE test1_recall_macro REAL
-@ATTRIBUTE fit_time INTEGER
-@ATTRIBUTE score_time_train INTEGER
-@ATTRIBUTE score_time_test0 INTEGER
-@ATTRIBUTE score_time_test1 INTEGER
 
 @DATA
-'0 days 00:00:00.126208','0 days 00:00:00.009115','0 days 00:00:00.006031','0 days 00:00:00.006060',1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0
-'0 days 00:00:00.140929','0 days 00:00:00.010250','0 days 00:00:00.006021','0 days 00:00:00.006000',1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0
+127.23,9.02,5.593,5.454,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0
+125.849,9.251,5.866,5.451,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0
 % 
 % 
 % 

@@ -186,3 +186,7 @@ def get_search_space(estimator):
         raise ValueError("Unknown estimator '{}'".format(estimator_name))
 
     return search_space, n_iter
+
+
+def timedelta_milliseconds(td):
+    return td.days * 86400000 + td.seconds * 1000 + td.microseconds / 1000
