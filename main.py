@@ -267,6 +267,16 @@ if __name__ == '__main__':
         'total_time': '{}ms'.format(ut.timedelta_milliseconds(dT_experiment))
     }
 
+    scores_per_repetition = scores[scores.split != 'train'].drop(['split'], axis=1).groupby(['dataset_name','estimator_name','repetition']).agg(['mad']).reset_index()
+    scores_per_repetition.columns = ['_'.join(tup).rstrip('_') for tup in scores_per_repetition.columns.values] 
+    mad_scores_per_algo_dataset = scores_per_repetition.drop(['repetition'], axis=1).groupby(['dataset_name','estimator_name']).agg('describe').reset_index()
+    mad_scores_per_algo_dataset.columns = ['_'.join(tup).rstrip('_') for tup in mad_scores_per_algo_dataset.columns.values] 
+    scores_per_algo_dataset = scores[scores.split != 'train'].drop(['split','repetition'], axis=1).groupby(['dataset_name','estimator_name']).agg('describe').reset_index()
+    scores_per_algo_dataset.columns = ['_'.join(tup).rstrip('_') for tup in scores_per_algo_dataset.columns.values] 
+    
+    io.save_data_arff(scores_per_repetition, experiment_dir+'/evaluation_scores_per_repetition.arff')
+    io.save_data_arff(scores_per_algo_dataset, experiment_dir+'/evaluation_scores_per_algo_dataset.arff')
+
     io.save_config(config, experiment_dir+'/config.json')
     io.save_config(experiment_metadata, experiment_dir+'/metadata.json')
     io.save_data_arff(scores, experiment_dir+'/evaluation_scores.arff')
