@@ -84,8 +84,10 @@ if __name__ == '__main__':
     if not os.path.exists(experiment_dir):
         os.makedirs(experiment_dir)
 
-    times = pd.DataFrame(columns=['dataset_name', 'estimator_name', 'repetition', 'split', 'fit_time', 'pred_time'])
-    scores = pd.DataFrame(columns=['dataset_name', 'estimator_name', 'repetition', 'split', 'accuracy', 'f1_macro', 'precision_macro', 'recall_macro'])
+    times_columns = ['dataset_name', 'estimator_name', 'repetition', 'split', 'fit_time', 'score_time']
+    times = pd.DataFrame(columns=times_columns)
+    scores_columns = ['dataset_name', 'estimator_name', 'repetition', 'split', 'accuracy', 'f1_macro', 'precision_macro', 'recall_macro']
+    scores = pd.DataFrame(columns=scores_columns)
 
     experiment_start_date = datetime.datetime.now()
 
@@ -175,7 +177,7 @@ if __name__ == '__main__':
                                  "r{}".format(repetition_i),
                                  "train",
                                  dT_fit, dT_train_score],
-                                index=['dataset_name', 'estimator_name', 'repetition', 'split', 'fit_time', 'pred_time'])
+                                index=times_columns)
                 times = times.append(row, ignore_index=True)
 
                 row = pd.Series(["d{}_{}".format(dataset_i, dataset_name),
@@ -183,8 +185,7 @@ if __name__ == '__main__':
                                  "r{}".format(repetition_i),
                                  "train",
                                  train_accuracy, train_f1, train_precision, train_recall],
-                                index=['dataset_name', 'estimator_name', 'repetition', 'split',
-                                       'accuracy', 'f1_macro', 'precision_macro', 'recall_macro'])
+                                index=scores_columns)
                 scores = scores.append(row, ignore_index=True)
 
                 # evaluation with all metrics for X_train and all in X_test_sets
@@ -221,8 +222,7 @@ if __name__ == '__main__':
                                      "r{}".format(repetition_i),
                                      "test{}".format(test_set_i),
                                      dT_fit, dT_test_score],
-                                    index=['dataset_name', 'estimator_name', 'repetition', 'split',
-                                           'fit_time', 'pred_time'])
+                                    index=times_columns)
                     times = times.append(row, ignore_index=True)
 
                     row = pd.Series(["d{}_{}".format(dataset_i, dataset_name),
@@ -230,8 +230,7 @@ if __name__ == '__main__':
                                      "r{}".format(repetition_i),
                                      "test{}".format(test_set_i),
                                      test_accuracy, test_f1, test_precision, test_recall],
-                                    index=['dataset_name', 'estimator_name', 'repetition', 'split',
-                                           'accuracy', 'f1_macro', 'precision_macro', 'recall_macro'])
+                                    index=scores_columns)
                     scores = scores.append(row, ignore_index=True)
 
                 result_row_list = result_row_list_times + result_row_list_scores

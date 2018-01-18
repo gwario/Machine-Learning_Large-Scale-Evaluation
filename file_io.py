@@ -394,7 +394,7 @@ def save_data_arff(dataset, dataset_filename, arff_data=None):
         integer_attrs = [(name, 'INTEGER') for name in dataset.select_dtypes(include='integer').columns.values]
         nominal_attrs = [(name, list(dataset[name].unique())) for name in dataset.select_dtypes(include='object').columns.values]
         # re-arrange columns like above
-        dataset.columns = [name for (name, type) in real_attrs + integer_attrs + nominal_attrs]
+        dataset = dataset[[name for (name, type) in real_attrs + integer_attrs + nominal_attrs]]
         dataset_name = os.path.splitext(os.path.basename(dataset_filename))[0]
         arff_data = {
             'relation': dataset_name,
