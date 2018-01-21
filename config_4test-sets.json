@@ -23,15 +23,13 @@
     {
       "estimator": "ExtraTreesClassifier",
       "params": {
-        "random_state": 12345,
-        "n_estimators": 500
+        "random_state": 12345
         }
       },
     {
       "estimator": "RandomForestClassifier",
       "params": {
-        "random_state": 12345,
-        "n_estimators": 500
+        "random_state": 12345
         }
       },
     {
@@ -43,7 +41,7 @@
     {
       "estimator": "AdaBoostClassifier",
       "params": {
-        "random_state": 12345,
+        "random_state": 12345
         }
       },
     {
