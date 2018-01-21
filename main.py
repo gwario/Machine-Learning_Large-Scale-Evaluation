@@ -15,6 +15,8 @@ from sklearn.model_selection import train_test_split
 
 import file_io as io
 import util as ut
+import drawBoxplot
+import drawErrorbar
 
 # Display progress logs on stdout
 log.basicConfig(level=log.INFO, format='%(asctime)s %(levelname)s %(message)s')
@@ -24,7 +26,7 @@ log.basicConfig(level=log.INFO, format='%(asctime)s %(levelname)s %(message)s')
 default_config = {
     'experiment': 'default_experiment',         # the title of the experiment
     'stratify': True,                           # whether to stratify or not
-    'repetitions': 2,                           # number of times every estimator is run with every dataset
+    'repetitions': 5,                           # number of times every estimator is run with every dataset
     'datasets': ['iris.arff',                   # preprocessed dataset
                  'mammography.arff',],
     'random_state': 12345,                      # the random state used where possible
@@ -274,8 +276,42 @@ if __name__ == '__main__':
     scores_per_algo_dataset = scores[scores.split != 'train'].drop(['split','repetition'], axis=1).groupby(['dataset_name','estimator_name']).agg('describe').reset_index()
     scores_per_algo_dataset.columns = ['_'.join(tup).rstrip('_') for tup in scores_per_algo_dataset.columns.values] 
     
+    if not os.path.exists(experiment_dir+'/plots'):
+        os.makedirs(experiment_dir+'/plots')
+    
+    mad_scores_per_dataset_for_plot = scores_per_repetition.groupby('dataset_name')
+    for dataset, d_group in mad_scores_per_dataset_for_plot:
+        mad_boxplot_data=[]
+        mad_boxplot_labels=[]
+        mad_errbar_data=[]
+        mad_errbar_err=[]
+        for algo, group in d_group.groupby('estimator_name'):
+            mad_boxplot_data.append(group['accuracy_mad'])
+            mad_boxplot_labels.append(algo[:2])
+            mad_errbar_data.append(group['accuracy_mad'].mean())
+            mad_errbar_err.append(group['accuracy_mad'].std())
+        drawBoxplot.drawBoxplotbar('algorithms', 'accuracy_mad',0,1,experiment_dir+'/plots/{}_mad_boxplot.png'.format(dataset), mad_boxplot_data, mad_boxplot_labels)
+        drawErrorbar.drawErrorbar(range(len(mad_errbar_data)), mad_errbar_data, mad_errbar_err, None,'algorithms', 'accuracy_mad',0,1,experiment_dir+'/plots/{}_mad_errorbar.png'.format(dataset))
+
+    mad_boxplot_data=[]
+    mad_boxplot_labels=[]
+    for algo, group in scores_per_repetition.groupby('estimator_name'):
+        mad_boxplot_data.append(group['accuracy_mad'])
+        mad_boxplot_labels.append(algo[:2])
+    drawBoxplot.drawBoxplotbar('algorithms', 'accuracy_mad',0,1,experiment_dir+'/plots/mad_boxplot.png', mad_boxplot_data, mad_boxplot_labels)
+ 
+   
+    scores_per_dataset_for_plot = scores.groupby('dataset_name')
+    for dataset, group in scores_per_dataset_for_plot:
+        acc_boxplot_data=[]
+        acc_boxplot_labels=[]
+        for algo, group in group.groupby('estimator_name'):
+            acc_boxplot_data.append(group['accuracy'])
+            acc_boxplot_labels.append(algo[:2])
+        drawBoxplot.drawBoxplotbar('algorithms', 'accuracy',0,1,experiment_dir+'/plots/{}_acc_boxplot.png'.format(dataset), acc_boxplot_data, acc_boxplot_labels)
+    
     io.save_data_arff(scores_per_repetition, experiment_dir+'/evaluation_scores_per_repetition.arff')
-    io.save_data_arff(scores_per_algo_dataset, experiment_dir+'/evaluation_scores_per_algo_dataset.arff')
+    io.save_data_arff(scores_per_algo_dataset.merge(mad_scores_per_algo_dataset), experiment_dir+'/evaluation_scores_per_algo_dataset.arff')
 
     io.save_config(config, experiment_dir+'/config.json')
     io.save_config(experiment_metadata, experiment_dir+'/metadata.json')

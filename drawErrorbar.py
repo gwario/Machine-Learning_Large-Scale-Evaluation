@@ -13,6 +13,8 @@ def drawErrorbar( xList, yList, xErrList, yErrList, xLabel, yLabel, printFigure,
 
     if printFigure == 1:
         plt.show()
+        
+    plt.close()
 
     return
 
