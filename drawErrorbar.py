@@ -10,6 +10,7 @@ def drawErrorbar( xList, yList, xErrList, yErrList, xLabel, yLabel, printFigure,
 
     if saveFigure == 1:
         plt.savefig(saveLink)
+        print("Errorbar plot saved as {}".format(saveLink))
 
     if printFigure == 1:
         plt.show()

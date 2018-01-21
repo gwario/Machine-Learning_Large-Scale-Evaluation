@@ -17,7 +17,7 @@
     "credit-g.arff"
   ],
   "random_state": 12345,
-  "train_size": 0.6,
+  "train_size": [0.6],
   "test_splits": 2,
   "estimators": [
     {

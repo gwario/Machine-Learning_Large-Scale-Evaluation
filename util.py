@@ -14,10 +14,10 @@ from sklearn.svm import SVC
 from sklearn.tree import DecisionTreeClassifier
 
 
-def generate_test_sets(X_test, y_test, repetition_i, config):
+def generate_test_sets(X_test, y_test, repetition_i, train_size, config):
 
     log.debug("# TEST_SETS: {}".format(config['test_splits']))
-    log.debug("TEST_SIZE: {}".format((1 - config['train_size']) / config['test_splits']))
+    log.debug("TEST_SIZE: {}".format((1 - train_size) / config['test_splits']))
 
     X_test_sets = []
     y_test_sets = []
