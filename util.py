@@ -112,7 +112,7 @@ def get_search_space(estimator):
             'min_samples_leaf': [1, 3, 5, 7, 0.001, 0.005, 0.01, 0.05, 0.0001, 0.0005],
             'max_leaf_nodes':   [None, 5, 10, 15, 20, 35, 30, 35, 40, 45, 50]
         }
-        n_iter = 20
+        n_iter = 50
     elif estimator_name == 'AdaBoostClassifier':
         search_space = {
             'random_state': [estimator.get_params()['random_state']],
@@ -120,7 +120,7 @@ def get_search_space(estimator):
             'learning_rate':[0.5, 0.65, 0.75, 0.85, 0.9, 1],
             'algorithm':    ['SAMME', 'SAMME.R']
         }
-        n_iter = 40
+        n_iter = 50
     elif estimator_name == 'DecisionTreeClassifier':
         search_space = {
             'random_state': [estimator.get_params()['random_state']],
@@ -139,23 +139,23 @@ def get_search_space(estimator):
     elif estimator_name == 'KNeighborsClassifier':
         search_space = {
             'algorithm':    ['ball_tree', 'kd_tree', 'brute'],
-            'n_neighbors':  [3, 4, 5, 7, 9, 11, 15, 17, 20],
+            'n_neighbors':  [1, 2, 3, 4, 7, 9],
             'metric':       ['euclidean', 'manhattan', 'cityblock', 'l1', 'l2'],
             'weights':      ["uniform", "distance"]
         }
-        n_iter = 60
+        n_iter = 30
     elif estimator_name == 'SVC':
         search_space = {
             'random_state': [estimator.get_params()['random_state']],
-            'C':            [1, 10, 100, 200, 1000, 2000],
+            'C':            [1, 10, 100, 200, 500],
             #'kernel':       ['linear', 'poly', 'rbf', 'sigmoid', 'precomputed'],
             'degree':       [2, 3, 4, 5, 6, 7, 8, 9],
             'gamma':        [0.05,'auto',0.1,0.001,0.15,0.2,0.3],
             'coef0':        [0.0, 1.0, 0.5, 4.2, 2.0, 0.73],
             'tol':          [0.01,0.00001,1,10,50,100],
-            'max_iter':     [-1, 500000],
+            'max_iter':     [-1, 50000],
         }
-        n_iter = 60
+        n_iter = 30
     elif estimator_name == 'GaussianProcessClassifier':
         search_space = {
             'random_state':         [estimator.get_params()['random_state']],
@@ -163,7 +163,7 @@ def get_search_space(estimator):
             'max_iter_predict':     [80, 100, 150, 200],
             'multi_class':          ['one_vs_rest', 'one_vs_one'],
         }
-        n_iter = 13
+        n_iter = 15
     elif estimator_name == 'MLPClassifier':
         search_space = None #TODO define MLPClassifier search space
         #search_space = {
