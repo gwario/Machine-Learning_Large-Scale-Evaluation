@@ -52,7 +52,8 @@ if __name__ == '__main__':
                                                    cv=5,
                                                    n_iter=n_iter,
                                                    random_state=config['random_state'],
-                                                   return_train_score=True)
+                                                   return_train_score=True,
+                                                   n_jobs=3)
 
                 # Do cross validated hyper-parameter search
                 t0 = datetime.now()
