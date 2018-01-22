@@ -38,7 +38,7 @@ ch_features = ['myct', 'mmin', 'mmax', 'cach', 'chmin', 'chmax']
 
 # use at most DATASET_INSTANCE_CAP_PCT of the instances
 DATASET_LESS_DATA = True
-DATASET_INSTANCE_CAP_CNT = 1000
+DATASET_INSTANCE_CAP_CNT = 2000
 
 
 def load_data(data_file, config):
@@ -152,12 +152,6 @@ def load_data(data_file, config):
         # nan: age, like, guess_prob_liked, met
         log.warning('Replacing NaN/missing values with 0...')
         df.fillna(0, inplace=True)
-
-        #log.warning('Dropping instances with NaN/missing values...')
-        #before = df.shape[0]
-        #df.dropna(axis=0, how='any', inplace=True)
-        #after = df.shape[0]
-        #log.warning('Dropped {} instances of {}!'.format(before-after, before))
 
         if DATASET_LESS_DATA:
             log.warning("Using at most {} instances.".format(DATASET_INSTANCE_CAP_CNT))
