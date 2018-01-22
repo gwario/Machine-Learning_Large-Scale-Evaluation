@@ -307,7 +307,7 @@ if __name__ == '__main__':
             mad_boxplot_labels.append(algo[:2])
         drawBoxplot.drawBoxplotbar('algorithms', 'accuracy_mad',0,1,experiment_dir+'/plots/train{}_mad_boxplot.png'.format(int(train_size*100)), mad_boxplot_data, mad_boxplot_labels)
 
-    scores_per_dataset_for_plot = scores.groupby(['dataset_name','train_size'])
+    scores_per_dataset_for_plot = scores[scores.split != 'train'].groupby(['dataset_name','train_size'])
     for (dataset,train_size), group in scores_per_dataset_for_plot:
         acc_boxplot_data=[]
         acc_boxplot_labels=[]
