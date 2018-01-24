@@ -275,11 +275,13 @@ if __name__ == '__main__':
         'total_time': '{}ms'.format(ut.timedelta_milliseconds(dT_experiment))
     }
 
-    scores_per_repetition = scores[scores.split != 'train'].drop(['split'], axis=1).groupby(['dataset_name','estimator_name', 'train_size','repetition']).agg(['mad']).reset_index()
+    scores_without_train = scores[scores.split != 'train']
+    
+    scores_per_repetition = scores_without_train.drop(['split'], axis=1).groupby(['dataset_name','estimator_name', 'train_size','repetition']).agg(['mad']).reset_index()
     scores_per_repetition.columns = ['_'.join(tup).rstrip('_') for tup in scores_per_repetition.columns.values] 
     mad_scores_per_algo_dataset = scores_per_repetition.drop(['repetition'], axis=1).groupby(['dataset_name','estimator_name','train_size']).agg('describe').reset_index()
     mad_scores_per_algo_dataset.columns = ['_'.join(tup).rstrip('_') for tup in mad_scores_per_algo_dataset.columns.values] 
-    scores_per_algo_dataset = scores[scores.split != 'train'].drop(['split','repetition'], axis=1).groupby(['dataset_name','estimator_name','train_size']).agg('describe').reset_index()
+    scores_per_algo_dataset = scores_without_train.drop(['split','repetition'], axis=1).groupby(['dataset_name','estimator_name','train_size']).agg('describe').reset_index()
     scores_per_algo_dataset.columns = ['_'.join(tup).rstrip('_') for tup in scores_per_algo_dataset.columns.values] 
     
     if not os.path.exists(experiment_dir+'/plots'):
@@ -289,16 +291,11 @@ if __name__ == '__main__':
     for (dataset,train_size), d_group in mad_scores_per_dataset_for_plot:
         mad_boxplot_data=[]
         mad_boxplot_labels=[]
-        mad_errbar_data=[]
-        mad_errbar_err=[]
         for algo, group in d_group.groupby('estimator_name'):
             mad_boxplot_data.append(group['accuracy_mad'])
             mad_boxplot_labels.append(algo[:2])
-            mad_errbar_data.append(group['accuracy_mad'].mean())
-            mad_errbar_err.append(group['accuracy_mad'].std())
         drawBoxplot.drawBoxplotbar('algorithms', 'accuracy_mad',0,1,experiment_dir+'/plots/{}_train{}_mad_boxplot.png'.format(dataset,int(train_size*100)), mad_boxplot_data, mad_boxplot_labels)
-        drawErrorbar.drawErrorbar(range(len(mad_errbar_data)), mad_errbar_data, mad_errbar_err, None,'algorithms', 'accuracy_mad',0,1,experiment_dir+'/plots/{}_train{}_mad_errorbar.png'.format(dataset,int(train_size*100)))
-
+ 
     for train_size, train_group in scores_per_repetition.groupby('train_size'):
         mad_boxplot_data=[]
         mad_boxplot_labels=[]
@@ -326,6 +323,17 @@ if __name__ == '__main__':
             mad_errbar_err=group.groupby('train_size')['accuracy_mad'].std()
             mad_errbar_x=config['train_size']
             drawErrorbar.drawErrorbar(mad_errbar_x, mad_errbar_data, mad_errbar_err, None,'train size', 'accuracy_mad',0,1,experiment_dir+'/plots/{}_{}_mad_errorbar.png'.format(dataset,algo))
+    
+    for algo, algo_group in scores_without_train.groupby('estimator_name'):
+        mad_errbar_data=algo_group.groupby('train_size').mean()['accuracy'].tolist()
+        mad_errbar_err=algo_group.groupby('train_size').std()['accuracy'].tolist()
+        mad_errbar_x=config['train_size']
+        drawErrorbar.drawErrorbar(mad_errbar_x, mad_errbar_data, mad_errbar_err, None,'train size', 'accuracy',0,1,experiment_dir+'/plots/{}_acc_errorbar.png'.format(algo))
+        for dataset, group in algo_group.groupby('dataset_name'):
+            mad_errbar_data=group.groupby('train_size')['accuracy'].mean()
+            mad_errbar_err=group.groupby('train_size')['accuracy'].std()
+            mad_errbar_x=config['train_size']
+            drawErrorbar.drawErrorbar(mad_errbar_x, mad_errbar_data, mad_errbar_err, None,'train size', 'accuracy',0,1,experiment_dir+'/plots/{}_{}_acc_errorbar.png'.format(dataset,algo))
         
     
     io.save_data_arff(scores_per_repetition, experiment_dir+'/evaluation_scores_per_repetition.arff')
